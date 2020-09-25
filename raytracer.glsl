@@ -142,7 +142,7 @@ vec4 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
     //Backface culling
     if(dot(rayDirection, nrm) < 0.) return vec4(0,0,0,0);
     
-    vec4 col = vec4( vec3(0.5,0.5,0.5)+nrm/2., 1 );
+    vec4 col = vec4( vec3(.5,.5,1)+nrm*3., 1 );
     
     return col;
 }
@@ -202,6 +202,7 @@ vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, 
         //Sample all and add (weighted) to output
         pixel_col += rt_sample_all(rayOrigin.xyz, rayDirection.xyz);
     }
+    
     return pixel_col*pixel_weight;
 }
 
