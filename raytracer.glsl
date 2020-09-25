@@ -29,6 +29,12 @@ vec3 ray_project(in vec3 rayOrigin, in vec3 rayDirection, in float t) {
     return rayOrigin+rayDirection*t;
 }
 
+//Length squared helper function
+float lenSq(in vec3 v) { return dot(v,v); }
+
+//Square
+float sq(in float v) { return v*v; }
+
 // END UTLILITY FUNCTIONS
 
 
@@ -103,15 +109,15 @@ float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
                  in vec3 sphereCenter, in float sphereRadius) {
     vec3 relpos = rayOrigin-sphereCenter;
 	
-	float a = dot(rayDirection, rayDirection);
-	float b = 2.*dot(relpos, rayDirection);
-	float c = dot(relpos, relpos) - sphereRadius*sphereRadius;
+	float      a = lenSq(rayDirection);
+	float half_b = dot(relpos, rayDirection);
+	float      c = lenSq(relpos) - sq(sphereRadius);
 	
-    float disc = b*b - 4.*a*c;
+    float disc = sq(half_b) - a*c;
     
     if(disc < 0.) return -1.;
     else {
-        return abs( (-b+sqrt(disc))/(2.*a) );
+        return abs( (-half_b+sqrt(disc))/a );
     }
 }
 
@@ -120,21 +126,25 @@ vec3 sphere_normal(in vec3 gPos,
     return normalize(gPos-sphereCenter);
 }
 
-vec3 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
+vec4 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
                   in vec3 sphereCenter, in float sphereRadius,
                   in float cachedT) {
     vec3 hit_gpos = ray_project(rayOrigin, rayDirection, cachedT);
+    vec3 nrm = sphere_normal(hit_gpos, sphereCenter, sphereRadius);
     
-    vec3 col = sphere_normal(hit_gpos, sphereCenter, sphereRadius);
+    //Backface culling
+    //if(dot(rayDirection, nrm) > 0.) return vec4(0,0,0,0);
     
-    return (vec3(1,1,1)+col)*0.5;
+    vec4 col = vec4( vec3(0.5,0.5,0.5)+nrm/2., 1 );
+    
+    return col;
 }
 
 vec4 raytrace_sphere(in vec3 rayOrigin, in vec3 rayDirection,
                      in vec3 sphereCenter, in float sphereRadius) {
 	float hitT = sphere_hit(rayOrigin, rayDirection, sphereCenter, sphereRadius);
     
-    if(hitT >= 0.) return vec4(sphere_color(rayOrigin, rayDirection, sphereCenter, sphereRadius, hitT), 1);
+    if(hitT >= 0.) return sphere_color(rayOrigin, rayDirection, sphereCenter, sphereRadius, hitT);
     else return vec4(0,0,0,0);
 }
 
