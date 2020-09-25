@@ -110,6 +110,8 @@ vec4 calcBGColor(in vec3 rayDirection, in vec3 rayOrigin)
 // BEGIN SPHERE
 
 
+//Does given ray intersect given sphere? If so, at what t such that
+//the global hit location will be ray::at(t)?
 float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
                  in vec3 sphereCenter, in float sphereRadius) {
     vec3 relpos = rayOrigin-sphereCenter;
@@ -126,25 +128,32 @@ float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
     }
 }
 
+//Get the *outer* normal of the given sphere.
+//Inner normal isn't necessary because inner faces are culled.
 vec3 sphere_normal(in vec3 gPos,
                    in vec3 sphereCenter, in float sphereRadius) {
     return normalize(gPos-sphereCenter);
 }
 
+//Get the color of the given sphere, for given ray.
+//Also caches t such that hit location is ray::at(t)
 vec4 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
                   in vec3 sphereCenter, in float sphereRadius,
                   in float cachedT) {
+    //Pretty-universal variables
     vec3 hit_gpos = ray_project(rayOrigin, rayDirection, cachedT);
     vec3 nrm = sphere_normal(hit_gpos, sphereCenter, sphereRadius);
     
     //Backface culling
     if(dot(rayDirection, nrm) < 0.) return vec4(0,0,0,0);
     
+    //Actual color logic
     vec4 col = vec4( vec3(.5,.5,1)+nrm*3., 1 );
     
     return col;
 }
 
+//Raytrace onto a sphere. Calls sphere_hit and (if hit) sphere_color
 vec4 raytrace_sphere(in vec3 rayOrigin, in vec3 rayDirection,
                      in vec3 sphereCenter, in float sphereRadius) {
 	float hitT = sphere_hit(rayOrigin, rayDirection, sphereCenter, sphereRadius);
@@ -165,6 +174,8 @@ void rt_blend(in vec4 back, in vec4 front, out vec4 result) {
     result = vec4(mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
 }
 
+//Sample ALL objects in the scene. If you want to add objects, write
+//them in here. Note: there is no Z-testing, so render back-to-front
 vec4 rt_sample_all(in vec3 rayOrigin, in vec3 rayDirection) {
     vec4 col_out = calcBGColor(rayDirection, rayOrigin);
     
@@ -181,6 +192,9 @@ vec4 rt_sample_all(in vec3 rayOrigin, in vec3 rayDirection) {
 // BEGIN SUPERSAMPLE ANTIALIASING
 
 
+//Sample a pixel using SuperSampled AntiAliasing technique
+//Peter Shirley uses random() calls, but we can't for performance reasons
+//and the fact that it doesn't exist in native GLSL
 vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, in int ss_count) {
     float pixel_weight = 1./float(sq(ss_count));
     
@@ -221,6 +235,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     // setup
     calcViewport(viewport, px_size, ndc, uv, aspect, resolutionInv,
                  viewportHeight, fragCoord, iResolution.xy);
+    
     // color
     fragColor = sample_pixel_ssaa(viewport, focalLength, px_size, SS_COUNT);
 }
