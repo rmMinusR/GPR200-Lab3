@@ -7,8 +7,8 @@
 // OBJECT PARAMETERS
 
 
-#define SPHERE_RADIUS 1.
-#define SPHERE_CENTER vec3(0,0,2)
+#define SPHERE_RADIUS 1.0
+#define SPHERE_CENTER vec3(0,0,1.5)
 
 
 // BEGIN UTILITY FUNCTIONS
@@ -16,6 +16,18 @@
 //Evil macro. Don't put functions into it (except for x)
 //Has to be a macro because genTypes don't exist
 #define fmap(v, lo1, hi1, lo2, hi2) ( (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2 )
+
+//Strip the integer part, return only the decimal part.
+float getDecimalPart(in float x) {
+    return x>0.?
+        x-float(int(x)):
+    	x-float(int(x))+1.;
+}
+
+//Project a ray by T
+vec3 ray_project(in vec3 rayOrigin, in vec3 rayDirection, in float t) {
+    return rayOrigin+rayDirection*t;
+}
 
 // END UTLILITY FUNCTIONS
 
@@ -83,48 +95,71 @@ vec4 calcBGColor(in vec3 rayDirection, in vec3 rayOrigin)
 
 // END ASSIGNMENT BOILERPLATE
 
-bool sphere_hit(in vec3 rayOrigin, in vec3 rayDirection, in vec3 sphereCenter, in float sphereRadius) {
-    vec3 rpos = rayOrigin-sphereCenter;
+
+// BEGIN SPHERE
+
+
+float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
+                 in vec3 sphereCenter, in float sphereRadius) {
+    vec3 relpos = rayOrigin-sphereCenter;
 	
 	float a = dot(rayDirection, rayDirection);
-	float b = 2.*dot(rpos, rayDirection);
-	float c = dot(rpos, rpos) - sphereRadius*sphereRadius;
+	float b = 2.*dot(relpos, rayDirection);
+	float c = dot(relpos, relpos) - sphereRadius*sphereRadius;
 	
     float disc = b*b - 4.*a*c;
     
-    return disc > 0.;
+    if(disc < 0.) return -1.;
+    else {
+        return abs( (-b+sqrt(disc))/(2.*a) );
+    }
 }
 
-vec3 sphere_color(in vec3 gPos,
+vec3 sphere_normal(in vec3 gPos,
                   in vec3 sphereCenter, in float sphereRadius) {
-    vec3 normal = normalize(gPos-sphereCenter);
-    return normal;
+    return normalize(gPos-sphereCenter);
 }
 
 vec3 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
-                  in vec3 sphereCenter, in float sphereRadius) {
-    return vec3(1,0,0); //TODO IMPLEMENT
+                  in vec3 sphereCenter, in float sphereRadius,
+                  in float cachedT) {
+    vec3 hit_gpos = ray_project(rayOrigin, rayDirection, cachedT);
+    
+    vec3 col = sphere_normal(hit_gpos, sphereCenter, sphereRadius);
+    
+    return (vec3(1,1,1)+col)*0.5;
 }
 
 vec4 raytrace_sphere(in vec3 rayOrigin, in vec3 rayDirection,
                      in vec3 sphereCenter, in float sphereRadius) {
-	bool hit = sphere_hit(rayOrigin, rayDirection, sphereCenter, sphereRadius);
+	float hitT = sphere_hit(rayOrigin, rayDirection, sphereCenter, sphereRadius);
     
-    if(hit) return vec4(sphere_color(rayOrigin, rayDirection, sphereCenter, sphereRadius), 1);
+    if(hitT >= 0.) return vec4(sphere_color(rayOrigin, rayDirection, sphereCenter, sphereRadius, hitT), 1);
     else return vec4(0,0,0,0);
 }
+
+
+// END SPHERE
+
+
+// BEGIN RAYTRACING
+
 
 void rt_blend(in vec4 back, in vec4 front, out vec4 result) {
     result = vec4(mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
 }
 
-vec4 rt_all(in vec3 rayOrigin, in vec3 rayDirection) {
+vec4 rt_sample_all(in vec3 rayOrigin, in vec3 rayDirection) {
     vec4 col_out = calcBGColor(rayDirection, rayOrigin);
     
     rt_blend(col_out, raytrace_sphere(rayOrigin, rayDirection, SPHERE_CENTER, SPHERE_RADIUS), col_out);
     
     return col_out;
 }
+
+
+// END RAYTRACING
+
 
 // mainImage: process the current pixel (exactly one call per pixel)
 //    fragColor: output final color for current pixel
@@ -146,11 +181,5 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             viewport, focalLength);
 
     // color
-    fragColor = rt_all(rayOrigin.xyz, rayDirection.xyz);
-
-    // TEST COLOR:
-    //  -> what do the other things calculated above look like?
-    //fragColor = vec4(viewport, 0.0, 0.0);
-    //fragColor = vec4(ndc, 0.0, 0.0);
-    //fragColor = vec4(uv, 0.0, 0.0);
+    fragColor = rt_sample_all(rayOrigin.xyz, rayDirection.xyz);
 }
