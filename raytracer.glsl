@@ -7,9 +7,9 @@
 // OBJECT PARAMETERS
 
 
-#define SPHERE_RADIUS 1.0
-#define SPHERE_CENTER vec3(0,0,1.5)
-
+#define SPHERE_RADIUS 1.
+#define SPHERE_CENTER vec3(0,0,2.5)
+#define SS_COUNT 3
 
 // BEGIN UTILITY FUNCTIONS
 
@@ -34,16 +34,19 @@ float lenSq(in vec3 v) { return dot(v,v); }
 
 //Square
 float sq(in float v) { return v*v; }
+int   sq(in int   v) { return v*v; }
 
 // END UTLILITY FUNCTIONS
 
 
 // BEGIN ASSIGNMENT BOILERPLATE
 // These snippets were copy-pasted from the assignment main page
+// calcViewport() modified by RC for SSAA
 
 
 // calcViewport: calculate the viewing plane (viewport) coordinate
 //    viewport:       output viewing plane coordinate
+//RC: px_size:        output size of each pixel, for SSAA calculations, in viewport coordinates
 //    ndc:            output normalized device coordinate
 //    uv:             output screen-space coordinate
 //    aspect:         output aspect ratio of screen
@@ -51,7 +54,7 @@ float sq(in float v) { return v*v; }
 //    viewportHeight: input height of viewing plane
 //    fragCoord:      input coordinate of current fragment (in pixels)
 //    resolution:     input resolution of screen (in pixels)
-void calcViewport(out vec2 viewport, out vec2 ndc, out vec2 uv,
+void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv,
                   out float aspect, out vec2 resolutionInv,
                   in float viewportHeight, in vec2 fragCoord, in vec2 resolution)
 {
@@ -62,13 +65,17 @@ void calcViewport(out vec2 viewport, out vec2 ndc, out vec2 uv,
     aspect = resolution.x * resolutionInv.y;
 
     // uv = screen-space coordinate = [0, 1) = coord / resolution
-    uv = fragCoord * resolutionInv;
-
+            uv = fragCoord * resolutionInv;
+	vec2 px_uv = vec2(1,1) * resolutionInv;
+    
     // ndc = normalized device coordinate = [-1, +1) = uv*2 - 1
-    ndc = uv * 2.0 - 1.0;
-
+            ndc = uv * 2.0 - 1.0;
+    vec2 px_ndc = px_uv*2. - 1.0;
+    
     // viewport: x = [-aspect*h/2, +aspect*h/2), y = [-h/2, +h/2)
-    viewport = ndc * (vec2(aspect, 1.0) * (viewportHeight * 0.5));
+    vec2 rhsCoeff = vec2(aspect, 1.0) * (viewportHeight * 0.5);
+    viewport = ndc * rhsCoeff;
+    px_size = px_ndc * rhsCoeff;
 }
 
 
@@ -122,7 +129,7 @@ float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
 }
 
 vec3 sphere_normal(in vec3 gPos,
-                  in vec3 sphereCenter, in float sphereRadius) {
+                   in vec3 sphereCenter, in float sphereRadius) {
     return normalize(gPos-sphereCenter);
 }
 
@@ -163,6 +170,7 @@ void rt_blend(in vec4 back, in vec4 front, out vec4 result) {
 vec4 rt_sample_all(in vec3 rayOrigin, in vec3 rayDirection) {
     vec4 col_out = calcBGColor(rayDirection, rayOrigin);
     
+    //Parametric sphere
     rt_blend(col_out, raytrace_sphere(rayOrigin, rayDirection, SPHERE_CENTER, SPHERE_RADIUS), col_out);
     
     return col_out;
@@ -172,25 +180,48 @@ vec4 rt_sample_all(in vec3 rayOrigin, in vec3 rayDirection) {
 // END RAYTRACING
 
 
+// BEGIN SUPERSAMPLE ANTIALIASING
+
+
+vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, in int ss_count) {
+    float pixel_weight = 1./float(sq(ss_count));
+    
+    vec2 neg_corner = viewport-px_size/2.;
+    vec2 pos_corner = viewport+px_size/2.;
+    
+    vec4 pixel_col = vec4(0,0,0,0);
+    
+    vec4 rayDirection, rayOrigin;
+    for(ivec2 ss_ind = ivec2(0,0); ss_ind.x < ss_count; ++ss_ind.x) for(ss_ind.y = 0; ss_ind.y < ss_count; ++ss_ind.y) {
+        //Create sample coordinates from viewport and subsample index
+        vec2 sample_coord = mix(neg_corner, pos_corner, (vec2(ss_ind)+vec2(0.5,0.5))/float(ss_count) );
+        
+        //Ray constructed from those coordinates
+        calcRay(rayDirection, rayOrigin, sample_coord, focalLength);
+        
+        //Sample all and add (weighted) to output
+        pixel_col += rt_sample_all(rayOrigin.xyz, rayDirection.xyz);
+    }
+    return pixel_col*pixel_weight;
+}
+
+
+// END SUPERSAMPLE ANTIALIASING
+
+
 // mainImage: process the current pixel (exactly one call per pixel)
 //    fragColor: output final color for current pixel
 //    fragCoord: input location of current pixel in image (in pixels)
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
     // viewing plane (viewport) info
-    vec2 viewport, ndc, uv, resolutionInv;
+    vec2 viewport, px_size, ndc, uv, resolutionInv;
     float aspect;
     const float viewportHeight = 2.0, focalLength = 1.0;
 
-    // ray
-    vec4 rayDirection, rayOrigin;
-
     // setup
-    calcViewport(viewport, ndc, uv, aspect, resolutionInv,
+    calcViewport(viewport, px_size, ndc, uv, aspect, resolutionInv,
                  viewportHeight, fragCoord, iResolution.xy);
-    calcRay(rayDirection, rayOrigin,
-            viewport, focalLength);
-
     // color
-    fragColor = rt_sample_all(rayOrigin.xyz, rayDirection.xyz);
+    fragColor = sample_pixel_ssaa(viewport, focalLength, px_size, SS_COUNT);
 }
