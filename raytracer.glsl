@@ -7,8 +7,8 @@
 // OBJECT PARAMETERS
 
 
-const float sphereSize   = 1.;
-const vec3  sphereCenter = vec3(0,0,2);
+#define SPHERE_RADIUS 1.
+#define SPHERE_CENTER vec3(0,0,2)
 
 
 // BEGIN UTILITY FUNCTIONS
@@ -75,7 +75,7 @@ void calcRay(out vec4 rayDirection, out vec4 rayOrigin,
 // calcBGColor: calculate the background color of a pixel given a ray
 //    rayDirection: input ray direction
 //    rayOrigin:    input ray origin
-vec4 calcBGColor(in vec4 rayDirection, in vec4 rayOrigin)
+vec4 calcBGColor(in vec3 rayDirection, in vec3 rayOrigin)
 {
     return mix(vec4(0,0.8,1,1), vec4(0,0,0.8,1), clamp(rayDirection.y/2.+0.5, 0., 1.));
 }
@@ -83,6 +83,48 @@ vec4 calcBGColor(in vec4 rayDirection, in vec4 rayOrigin)
 
 // END ASSIGNMENT BOILERPLATE
 
+bool sphere_hit(in vec3 rayOrigin, in vec3 rayDirection, in vec3 sphereCenter, in float sphereRadius) {
+    vec3 rpos = rayOrigin-sphereCenter;
+	
+	float a = dot(rayDirection, rayDirection);
+	float b = 2.*dot(rpos, rayDirection);
+	float c = dot(rpos, rpos) - sphereRadius*sphereRadius;
+	
+    float disc = b*b - 4.*a*c;
+    
+    return disc > 0.;
+}
+
+vec3 sphere_color(in vec3 gPos,
+                  in vec3 sphereCenter, in float sphereRadius) {
+    vec3 normal = normalize(gPos-sphereCenter);
+    return normal;
+}
+
+vec3 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
+                  in vec3 sphereCenter, in float sphereRadius) {
+    return vec3(1,0,0); //TODO IMPLEMENT
+}
+
+vec4 raytrace_sphere(in vec3 rayOrigin, in vec3 rayDirection,
+                     in vec3 sphereCenter, in float sphereRadius) {
+	bool hit = sphere_hit(rayOrigin, rayDirection, sphereCenter, sphereRadius);
+    
+    if(hit) return vec4(sphere_color(rayOrigin, rayDirection, sphereCenter, sphereRadius), 1);
+    else return vec4(0,0,0,0);
+}
+
+void rt_blend(in vec4 back, in vec4 front, out vec4 result) {
+    result = vec4(mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
+}
+
+vec4 rt_all(in vec3 rayOrigin, in vec3 rayDirection) {
+    vec4 col_out = calcBGColor(rayDirection, rayOrigin);
+    
+    rt_blend(col_out, raytrace_sphere(rayOrigin, rayDirection, SPHERE_CENTER, SPHERE_RADIUS), col_out);
+    
+    return col_out;
+}
 
 // mainImage: process the current pixel (exactly one call per pixel)
 //    fragColor: output final color for current pixel
@@ -104,7 +146,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             viewport, focalLength);
 
     // color
-    fragColor = calcBGColor(rayDirection, rayOrigin);
+    fragColor = rt_all(rayOrigin.xyz, rayDirection.xyz);
 
     // TEST COLOR:
     //  -> what do the other things calculated above look like?
