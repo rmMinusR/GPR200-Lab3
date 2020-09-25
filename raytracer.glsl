@@ -4,6 +4,22 @@
  * No license - all rights reserved
  */
 
+// OBJECT PARAMETERS
+
+
+const float sphereSize   = 1.;
+const vec3  sphereCenter = vec3(0,0,2);
+
+
+// BEGIN UTILITY FUNCTIONS
+
+//Evil macro. Don't put functions into it (except for x)
+//Has to be a macro because genTypes don't exist
+#define fmap(v, lo1, hi1, lo2, hi2) ( (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2 )
+
+// END UTLILITY FUNCTIONS
+
+
 // BEGIN ASSIGNMENT BOILERPLATE
 // These snippets were copy-pasted from the assignment main page
 
@@ -56,18 +72,16 @@ void calcRay(out vec4 rayDirection, out vec4 rayOrigin,
 }
 
 
-// END ASSIGNMENT BOILERPLATE
-
-
-// calcColor: calculate the color of a pixel given a ray
+// calcBGColor: calculate the background color of a pixel given a ray
 //    rayDirection: input ray direction
 //    rayOrigin:    input ray origin
-vec4 calcColor(in vec4 rayDirection, in vec4 rayOrigin)
+vec4 calcBGColor(in vec4 rayDirection, in vec4 rayOrigin)
 {
-    // DUMMY RESULT: OUTPUT RAY DIRECTION AS-IS
-    // -> what does the ray look like as color?
-    return rayDirection;
+    return mix(vec4(0,0.8,1,1), vec4(0,0,0.8,1), clamp(rayDirection.y/2.+0.5, 0., 1.));
 }
+
+
+// END ASSIGNMENT BOILERPLATE
 
 
 // mainImage: process the current pixel (exactly one call per pixel)
@@ -90,7 +104,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
             viewport, focalLength);
 
     // color
-    fragColor = calcColor(rayDirection, rayOrigin);
+    fragColor = calcBGColor(rayDirection, rayOrigin);
 
     // TEST COLOR:
     //  -> what do the other things calculated above look like?
