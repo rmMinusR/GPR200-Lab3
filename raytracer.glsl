@@ -133,7 +133,7 @@ vec4 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
     vec3 nrm = sphere_normal(hit_gpos, sphereCenter, sphereRadius);
     
     //Backface culling
-    //if(dot(rayDirection, nrm) > 0.) return vec4(0,0,0,0);
+    if(dot(rayDirection, nrm) < 0.) return vec4(0,0,0,0);
     
     vec4 col = vec4( vec3(0.5,0.5,0.5)+nrm/2., 1 );
     
@@ -155,6 +155,7 @@ vec4 raytrace_sphere(in vec3 rayOrigin, in vec3 rayDirection,
 // BEGIN RAYTRACING
 
 
+//Blend layers based on alpha
 void rt_blend(in vec4 back, in vec4 front, out vec4 result) {
     result = vec4(mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
 }
