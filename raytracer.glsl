@@ -9,7 +9,7 @@
 
 #define SPHERE_RADIUS 1.
 #define SPHERE_CENTER vec3(0,0,2.5)
-#define SS_COUNT 3
+#define SS_COUNT 4
 
 // BEGIN UTILITY FUNCTIONS
 
@@ -65,17 +65,15 @@ void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv
     aspect = resolution.x * resolutionInv.y;
 
     // uv = screen-space coordinate = [0, 1) = coord / resolution
-            uv = fragCoord * resolutionInv;
-	vec2 px_uv = vec2(1,1) * resolutionInv;
-    
+    uv = fragCoord * resolutionInv;
+	
     // ndc = normalized device coordinate = [-1, +1) = uv*2 - 1
-            ndc = uv * 2.0 - 1.0;
-    vec2 px_ndc = px_uv*2. - 1.0;
+    ndc = uv * 2.0 - 1.0;
     
     // viewport: x = [-aspect*h/2, +aspect*h/2), y = [-h/2, +h/2)
     vec2 rhsCoeff = vec2(aspect, 1.0) * (viewportHeight * 0.5);
     viewport = ndc * rhsCoeff;
-    px_size = px_ndc * rhsCoeff;
+    px_size = resolutionInv * 2. * rhsCoeff; //Derived from UV and NDC
 }
 
 
