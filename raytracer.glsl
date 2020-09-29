@@ -9,11 +9,11 @@
 
 #define SPHERE_RADIUS 1.
 #define SPHERE_CENTER vec3(0,0,2.5)
-#define SS_COUNT 4
+#define SS_COUNT 8
 
 // BEGIN UTILITY FUNCTIONS
 
-//Evil macro. Don't put functions into it (except for x)
+//Evil macro. Don't put functions into it (except for as v)
 //Has to be a macro because genTypes don't exist
 #define fmap(v, lo1, hi1, lo2, hi2) ( (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2 )
 
@@ -124,7 +124,7 @@ float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
     
     if(disc < 0.) return -1.;
     else {
-        return abs( (-half_b+sqrt(disc))/a );
+        return abs( (-half_b-sqrt(disc))/a );
     }
 }
 
