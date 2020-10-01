@@ -14,6 +14,14 @@ const int SS_COUNT = 1;
 
 const float NEAR_PLANE = 0.1f;
 
+
+// LIGHT PARAMETERS
+
+const vec4  LIGHT_POS = vec4(5, 5, 5.-1.5, 1);
+const vec3  LIGHT_COLOR = vec3(1, 1, 1);
+const float LIGHT_INTENSITY = 6.;
+
+
 // OBJECT PARAMETERS
 
 const float SPHERE_RADIUS = 1.;
@@ -73,7 +81,7 @@ vec4 as_direction(in vec3 offset)
 // END LAB 4 BOILERPLATE
 
 
-// BEGIN RAY DATA STRUCTURE
+// BEGIN RAY
 
 struct Ray {
     vec4 origin;
@@ -91,7 +99,80 @@ vec4 ray_at(in Ray this, in float t) {
     return as_point( this.origin.xyz + t*this.direction.xyz );
 }
 
-// END RAY DATA STRUCTURE
+// END RAY
+
+
+// BEGIN RAYTRACE-HIT DATA STRUCTURE
+
+/*
+
+Raycastable objects must:
+
+Have a named fully-encapsulating data structure with ctor:
+ - MyRaycastable mk_MyRaycastable(...)
+
+Implement the following method signatures:
+ - float hit(in MyRaycastable this, in Ray ray) => returns T such that hit position is ray_at(T)
+ - vec4 normal(in MyRaycastable this, in vec4 global_pos) => returns normalized direction vector perpendicular to the tangent at global_pos
+ - vec4 raytrace(in MyRaycastable this, in Ray ray) => returns color for given ray, or transparent if no hit
+
+*/
+
+//Helper macros that should be included in every raytrace()
+#define PREPARE_VARS(cachedT) rt_hit hit;\
+    hit.pos = ray_at(ray, cachedT);\
+    hit.nrm = normal(this, hit.pos);
+#define BACKFACE_CULL if(dot(ray.direction, hit.nrm) > 0.) return rt_hit_none();
+#define NEARPLANE_CULL if(hit.pos.z > -NEAR_PLANE) return rt_hit_none();
+
+//Helper data structure
+struct rt_hit {
+    vec4 pos;
+    vec4 nrm;
+    vec4 color;
+};
+
+rt_hit rt_hit_none() { rt_hit val; return val; }
+
+bool rt_hit_good(in rt_hit val) { return val.pos.z != 0.; }
+
+// END RAYTRACE-HIT DATA STRUCTURE
+
+
+// BEGIN LIGHTS
+
+struct PointLight {
+    vec4 pos;
+    vec4 color; //W/A used as intensity
+};
+
+PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
+    PointLight val;
+    val.pos = as_point(center.xyz);
+    val.color.rgb = color;
+    val.color.a = abs(intensity);
+    return val;
+}
+
+//BOTH INPUTS MUST BE NORMALIZED
+float lambert_diffuse_coeff(in vec4 light_ray_dir, in vec4 normal) {
+    return dot(normal, light_ray_dir);
+}
+
+float attenuation_coeff(in float d, in float intensity) {
+    return 1./sq(d/intensity+1.);
+}
+
+float lambert_diffuse_intensity(in PointLight light, in rt_hit hit) {
+    vec4 posdiff = light.pos-hit.pos;
+    return lambert_diffuse_coeff(posdiff, hit.nrm) * attenuation_coeff(length(posdiff), light.color.a);
+}
+
+void lambert_light(in PointLight light, inout rt_hit hit) {
+    hit.color.rgb = lambert_diffuse_intensity(light, hit) * hit.color.rgb * light.color.rgb;
+}
+
+// END LIGHTS
 
 
 // BEGIN LAB 3 BOILERPLATE
@@ -157,25 +238,6 @@ vec4 calcBGColor(in Ray ray)
 // END LAB 3 BOILERPLATE
 
 
-/*
-
-Raycastable objects must:
-
-Have a named fully-encapsulating data structure with ctor:
- - MyRaycastable mk_MyRaycastable(...)
-
-Implement the following method signatures:
- - float hit(in MyRaycastable this, in Ray ray) => returns T such that hit position is ray_at(T)
- - vec4 normal(in MyRaycastable this, in vec4 global_pos) => returns normalized direction vector perpendicular to the tangent at global_pos
- - vec4 color(in MyRaycastable this, in Ray ray, in float cachedT) => returns color of object for given ray
- - vec4 raytrace(in MyRaycastable this, in Ray ray) => returns color for given ray, or transparent if no hit
-
-*/
-
-//Helper macros that should be included in every raytrace()
-#define BACKFACE_CULL if(dot(ray.direction, nrm) > 0.) return vec4(0,0,0,0);
-#define NEARPLANE_CULL if(hit_gpos.z > -NEAR_PLANE) return vec4(0,0,0,0);
-
 // BEGIN SPHERE
 
 struct Sphere {
@@ -219,28 +281,23 @@ vec4 normal(in Sphere this, in vec4 global_pos) {
     return (global_pos-this.center)/this.radius;
 }
 
-//Get the color of the given sphere, for given ray.
-//Uses cached t such that hit location is ray_at(ray, t)
-vec4 color(in Sphere this, in Ray ray, in float cachedT) {
-    //Pretty-universal variables
-    vec4 hit_gpos = ray_at(ray, cachedT);
-    vec4 nrm = normal(this, hit_gpos);
-    
-    BACKFACE_CULL;
-    NEARPLANE_CULL;
-    
-    //Actual color logic (currently shows normal)
-    vec4 col = vec4( vec3(.5,.5,.5)+nrm.xyz*0.7, 1 );
-    
-    return col;
-}
-
 //Raytrace onto a sphere. Calls sphere_hit and (if hit) sphere_color
-vec4 raytrace(in Sphere this, in Ray ray) {
+rt_hit raytrace(in Sphere this, in Ray ray, in PointLight light) {
 	float hitT = hit(this, ray);
     
-    if(hitT >= 0.) return color(this, ray, hitT);
-    else return vec4(0,0,0,0);
+    if(hitT < 0.) return rt_hit_none();
+    else {
+        PREPARE_VARS(hitT);
+        BACKFACE_CULL;
+        NEARPLANE_CULL;
+
+        //Actual color logic (currently shows normal)
+        hit.color = vec4( vec3(.5,.5,.5)+hit.nrm.xyz*0.7, 1 );
+        
+        lambert_light(light, hit);
+
+        return hit;
+    }
 }
 
 // END SPHERE
@@ -257,13 +314,13 @@ void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
 //them in here. Note: there is no Z-testing, so render back-to-front
 vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     vec4 col_out = calcBGColor(ray);
+    PointLight light = mk_PointLight(LIGHT_POS, LIGHT_COLOR, LIGHT_INTENSITY);
     
     //Parametric sphere
-    Sphere sphere = mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS);
-    alpha_blend(col_out, raytrace(sphere, ray), col_out);
+    alpha_blend(col_out, raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, light).color, col_out);
     
     //For debugging purposes
-    float mouseT = hit(sphere, rMouse);
+    //float mouseT = hit(sphere, rMouse);
     
     return col_out;
 }
