@@ -9,13 +9,14 @@
 const float viewportHeight = 2.0;
 const float focalLength = 1.0;
 
-const int SS_COUNT = 2;
+const int SS_COUNT = 4;
+//#define SS_COUNT int( getDecimalPart(iTime/3.) * 6. + 1. )
 
 
 // OBJECT PARAMETERS
 
 const float SPHERE_RADIUS = 1.;
-#define SPHERE_CENTER vec4(sin(iTime)/2., cos(iTime)/2., 2.5, 1)
+const vec4 SPHERE_CENTER = vec4(0, 0, 1.5, 1); //vec4(sin(iTime)/2., cos(iTime)/2., 2.5, 1)
 
 
 // BEGIN UTILITY FUNCTIONS
@@ -127,6 +128,7 @@ void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv
     vec2 rhsCoeff = vec2(aspect, 1.0) * (viewportHeight * 0.5);
     viewport = ndc * rhsCoeff;
     px_size = resolutionInv * 2. * rhsCoeff; //Derived from UV and NDC
+    
 }
 
 // calcRay: calculate the ray direction and origin for the current pixel
@@ -213,35 +215,37 @@ vec4 normal(in Sphere this, in vec4 global_pos) {
 }
 
 //Get the color of the given sphere, for given ray.
-//Also caches t such that hit location is ray::at(t)
-vec4 color(in Sphere sphere, in Ray ray, in float cachedT) {
+//Uses cached t such that hit location is ray_at(ray, t)
+vec4 color(in Sphere this, in Ray ray, in float cachedT) {
     //Pretty-universal variables
     vec4 hit_gpos = ray_at(ray, cachedT);
-    vec4 nrm = normal(sphere, hit_gpos);
+    vec4 nrm = normal(this, hit_gpos);
+    
+    //return vec4( length(hit_gpos-this.center)/this.radius*0.25, -0.25*hit_gpos.z, 0.*cachedT/2., 1);
+    return vec4(nrm.xyz*0.8 + vec3(1,1,1)*0.5, 1);
+    //return vec4( (hit_gpos-this.center).xy, length(hit_gpos-this.center)/10., 1);
     
     //Backface culling
-    if(dot(ray.direction, nrm) < 0.) return vec4(0,0,0,0);
+    //if(dot(ray.direction, nrm) < 0.) return vec4(0,0,0,0);
     
     //Actual color logic
-    vec4 col = vec4( vec3(.5,.5,1)+nrm.xyz*3., 1 );
+    vec4 col = vec4( vec3(.5,.5,.5)+nrm.xyz, 1 );
     
     return col;
 }
 
 //Raytrace onto a sphere. Calls sphere_hit and (if hit) sphere_color
-vec4 raytrace(in Sphere sphere, in Ray ray) {
-	float hitT = hit(sphere, ray);
+vec4 raytrace(in Sphere this, in Ray ray) {
+	float hitT = hit(this, ray);
     
-    if(hitT >= 0.) return color(sphere, ray, hitT);
+    if(hitT >= 0.) return color(this, ray, hitT);
     else return vec4(0,0,0,0);
 }
-
 
 // END SPHERE
 
 
 // BEGIN RAYTRACING
-
 
 //Blend layers based on alpha
 void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
@@ -250,32 +254,43 @@ void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
 
 //Sample ALL objects in the scene. If you want to add objects, write
 //them in here. Note: there is no Z-testing, so render back-to-front
-vec4 rt_sample_all(in Ray ray) {
+vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     vec4 col_out = calcBGColor(ray);
     
     //Parametric sphere
-    alpha_blend(col_out, raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray), col_out);
+    Sphere sphere = mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS);
+    alpha_blend(col_out, raytrace(sphere, ray), col_out);
+    
+    //Normal-test sphere
+    float tmpT = hit(sphere, rMouse);
+    if(tmpT > 0.) {
+        vec4 hit_pos = ray_at(rMouse, tmpT);
+        vec4 test_pos = sphere.center + normal(sphere, hit_pos);
+    	alpha_blend(col_out, raytrace(mk_Sphere(test_pos, 0.25), ray), col_out);
+    }
     
     return col_out;
 }
-
 
 // END RAYTRACING
 
 
 // BEGIN SUPERSAMPLE ANTIALIASING
 
-
 //Sample a pixel using SuperSampled AntiAliasing technique
 //Peter Shirley uses random() calls, but we can't for performance
 //reasons plus it doesn't exist predefined in GLSL
-vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, in int ss_count) {
+vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, in int ss_count, in vec2 vpMouse) {
     float pixel_weight = 1./float(sq(ss_count));
     
     vec2 neg_corner = viewport-px_size/2.;
     vec2 pos_corner = viewport+px_size/2.;
     
     vec4 pixel_col = vec4(0,0,0,0);
+        
+    //debug: mouse ray
+    Ray mouseRay;
+    calcRay(mouseRay, vpMouse, focalLength);
     
     Ray ray;
     for(ivec2 ss_ind = ivec2(0,0); ss_ind.x < ss_count; ++ss_ind.x) for(ss_ind.y = 0; ss_ind.y < ss_count; ++ss_ind.y) {
@@ -286,12 +301,11 @@ vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, 
         calcRay(ray, sample_coord, focalLength);
         
         //Sample all and add (weighted) to output
-        pixel_col += rt_sample_all(ray);
+        pixel_col += rt_sample_all(ray, mouseRay);
     }
     
     return pixel_col*pixel_weight;
 }
-
 
 // END SUPERSAMPLE ANTIALIASING
 
@@ -304,11 +318,16 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     // viewing plane (viewport) info
     vec2 viewport, px_size, ndc, uv, resolutionInv;
     float aspect;
-
+	
+    // debugging: mouse raycast (most values discarded)
+    vec2 vpMouse;
+    calcViewport(vpMouse, px_size, ndc, uv, aspect, resolutionInv,
+                 viewportHeight, iMouse.xy, iResolution.xy);
+    
     // setup
     calcViewport(viewport, px_size, ndc, uv, aspect, resolutionInv,
                  viewportHeight, fragCoord, iResolution.xy);
     
     // color
-    fragColor = sample_pixel_ssaa(viewport, focalLength, px_size, SS_COUNT);
+    fragColor = sample_pixel_ssaa(viewport, focalLength, px_size, SS_COUNT, vpMouse);
 }
