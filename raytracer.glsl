@@ -9,14 +9,15 @@
 const float viewportHeight = 2.0;
 const float focalLength = 1.0;
 
-const int SS_COUNT = 4;
+const int SS_COUNT = 1;
 //#define SS_COUNT int( getDecimalPart(iTime/3.) * 6. + 1. )
 
+const float NEAR_PLANE = 0.1f;
 
 // OBJECT PARAMETERS
 
 const float SPHERE_RADIUS = 1.;
-const vec4 SPHERE_CENTER = vec4(0, 0, 1.5, 1); //vec4(sin(iTime)/2., cos(iTime)/2., 2.5, 1)
+const vec4 SPHERE_CENTER = vec4(0, 0, -1.5, 1); //vec4(sin(iTime)/2., cos(iTime)/2., 2.5, 1)
 
 
 // BEGIN UTILITY FUNCTIONS
@@ -171,6 +172,9 @@ Implement the following method signatures:
 
 */
 
+//Helper macros that should be included in every raytrace()
+#define BACKFACE_CULL if(dot(ray.direction, nrm) > 0.) return vec4(0,0,0,0);
+#define NEARPLANE_CULL if(hit_gpos.z > -NEAR_PLANE) return vec4(0,0,0,0);
 
 // BEGIN SPHERE
 
@@ -211,7 +215,8 @@ float hit(in Sphere this, in Ray ray) {
 //Get the *outer* normal of the given sphere.
 //Inner normal isn't necessary because inner faces are culled.
 vec4 normal(in Sphere this, in vec4 global_pos) {
-    return as_direction( (global_pos.xyz-this.center.xyz)/this.radius );
+    //return normalize(global_pos-this.center);
+    return (global_pos-this.center)/this.radius;
 }
 
 //Get the color of the given sphere, for given ray.
@@ -221,15 +226,11 @@ vec4 color(in Sphere this, in Ray ray, in float cachedT) {
     vec4 hit_gpos = ray_at(ray, cachedT);
     vec4 nrm = normal(this, hit_gpos);
     
-    //return vec4( length(hit_gpos-this.center)/this.radius*0.25, -0.25*hit_gpos.z, 0.*cachedT/2., 1);
-    return vec4(nrm.xyz*0.8 + vec3(1,1,1)*0.5, 1);
-    //return vec4( (hit_gpos-this.center).xy, length(hit_gpos-this.center)/10., 1);
+    BACKFACE_CULL;
+    NEARPLANE_CULL;
     
-    //Backface culling
-    //if(dot(ray.direction, nrm) < 0.) return vec4(0,0,0,0);
-    
-    //Actual color logic
-    vec4 col = vec4( vec3(.5,.5,.5)+nrm.xyz, 1 );
+    //Actual color logic (currently shows normal)
+    vec4 col = vec4( vec3(.5,.5,.5)+nrm.xyz*0.7, 1 );
     
     return col;
 }
@@ -261,13 +262,8 @@ vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     Sphere sphere = mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS);
     alpha_blend(col_out, raytrace(sphere, ray), col_out);
     
-    //Normal-test sphere
-    float tmpT = hit(sphere, rMouse);
-    if(tmpT > 0.) {
-        vec4 hit_pos = ray_at(rMouse, tmpT);
-        vec4 test_pos = sphere.center + normal(sphere, hit_pos);
-    	alpha_blend(col_out, raytrace(mk_Sphere(test_pos, 0.25), ray), col_out);
-    }
+    //For debugging purposes
+    float mouseT = hit(sphere, rMouse);
     
     return col_out;
 }
