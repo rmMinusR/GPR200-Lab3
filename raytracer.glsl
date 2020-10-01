@@ -4,18 +4,32 @@
  * No license - all rights reserved
  */
 
+// CAMERA PARAMETERS
+
+const float viewportHeight = 2.0;
+const float focalLength = 1.0;
+
+const int SS_COUNT = 2;
+
+
 // OBJECT PARAMETERS
 
+const float SPHERE_RADIUS = 1.;
+#define SPHERE_CENTER vec4(sin(iTime)/2., cos(iTime)/2., 2.5, 1)
 
-#define SPHERE_RADIUS 1.
-#define SPHERE_CENTER vec3(0,0,2.5)
-#define SS_COUNT 8
 
 // BEGIN UTILITY FUNCTIONS
 
-//Evil macro. Don't put functions into it (except for as v)
-//Has to be a macro because genTypes don't exist
-#define fmap(v, lo1, hi1, lo2, hi2) ( (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2 )
+//I want to be able to use the "this" keyword
+#define this _this
+
+//Float range remap. Now no longer an eeevil macro thanks to preprocessor!
+#define GEN_DECLARE(genType) genType fmap(in genType v, in genType lo1, in genType hi1, in genType lo2, in genType hi2) { return (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2; }
+GEN_DECLARE(float)
+GEN_DECLARE(vec2)
+GEN_DECLARE(vec3)
+GEN_DECLARE(vec4)
+#undef GEN_DECLARE
 
 //Strip the integer part, return only the decimal part.
 float getDecimalPart(in float x) {
@@ -24,13 +38,12 @@ float getDecimalPart(in float x) {
     	x-float(int(x))+1.;
 }
 
-//Project a ray by T
-vec3 ray_project(in vec3 rayOrigin, in vec3 rayDirection, in float t) {
-    return rayOrigin+rayDirection*t;
-}
-
 //Length squared helper function
-float lenSq(in vec3 v) { return dot(v,v); }
+#define GEN_DECLARE(genType) float lenSq(in genType v) { return dot(v,v); }
+GEN_DECLARE(vec2)
+GEN_DECLARE(vec3)
+GEN_DECLARE(vec4)
+#undef GEN_DECLARE
 
 //Square
 float sq(in float v) { return v*v; }
@@ -39,10 +52,50 @@ int   sq(in int   v) { return v*v; }
 // END UTLILITY FUNCTIONS
 
 
-// BEGIN ASSIGNMENT BOILERPLATE
-// These snippets were copy-pasted from the assignment main page
-// calcViewport() modified by RC for SSAA
+// BEGIN LAB 4 BOILERPLATE
 
+// as_point: promote a 3D vector into a 4D vector representing a point (w=1)
+//    point: input 3D vector to be converted into a point
+vec4 as_point(in vec3 point)
+{
+    return vec4(point, 1.0);
+}
+
+// as_offset: promote a 3D vector into a 4D vector representing an offset (w=0)
+//    offset: input 3D vector to be converted into an offset
+vec4 as_direction(in vec3 offset)
+{
+    return vec4(offset, 0.0);
+}
+
+// END LAB 4 BOILERPLATE
+
+
+// BEGIN RAY DATA STRUCTURE
+
+struct Ray {
+    vec4 origin;
+    vec4 direction;
+};
+
+Ray mk_ray(in vec4 origin, in vec4 direction) {
+    Ray v;
+    v.origin = as_point(origin.xyz);
+    v.direction = as_direction(direction.xyz);
+    return v;
+}
+
+vec4 ray_at(in Ray this, in float t) {
+    return as_point( this.origin.xyz + t*this.direction.xyz );
+}
+
+// END RAY DATA STRUCTURE
+
+
+// BEGIN LAB 3 BOILERPLATE
+// These snippets were copy-pasted from the assignment main page
+// calcViewport() modified by RC for use in SSAA
+// calcBGColor() modified by RC for data-structure syntax
 
 // calcViewport: calculate the viewing plane (viewport) coordinate
 //    viewport:       output viewing plane coordinate
@@ -76,49 +129,74 @@ void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv
     px_size = resolutionInv * 2. * rhsCoeff; //Derived from UV and NDC
 }
 
-
 // calcRay: calculate the ray direction and origin for the current pixel
-//    rayDirection: output direction of ray from origin
-//    rayOrigin:    output origin point of ray
+//    ray:          output ray, origin-relative
 //    viewport:     input viewing plane coordinate (use above function to calculate)
 //    focalLength:  input distance to viewing plane
-void calcRay(out vec4 rayDirection, out vec4 rayOrigin,
-             in vec2 viewport, in float focalLength)
+void calcRay(out Ray ray, in vec2 viewport, in float focalLength)
 {
     // ray origin relative to viewer is the origin
     // w = 1 because it represents a point; can ignore when using
-    rayOrigin = vec4(0.0, 0.0, 0.0, 1.0);
+    ray.origin = vec4(0.0, 0.0, 0.0, 1.0);
 
     // ray direction relative to origin is based on viewing plane coordinate
     // w = 0 because it represents a direction; can ignore when using
-    rayDirection = vec4(viewport.x, viewport.y, -focalLength, 0.0);
+    ray.direction = vec4(viewport.x, viewport.y, -focalLength, 0.0);
 }
-
 
 // calcBGColor: calculate the background color of a pixel given a ray
-//    rayDirection: input ray direction
-//    rayOrigin:    input ray origin
-vec4 calcBGColor(in vec3 rayDirection, in vec3 rayOrigin)
+//    ray: input ray
+vec4 calcBGColor(in Ray ray)
 {
-    return mix(vec4(0,0.8,1,1), vec4(0,0,0.8,1), clamp(rayDirection.y/2.+0.5, 0., 1.));
+    return mix(vec4(0,0.8,1,1), vec4(0,0,0.8,1), clamp(ray.direction.y/2.+0.5, 0., 1.));
 }
 
+// END LAB 3 BOILERPLATE
 
-// END ASSIGNMENT BOILERPLATE
+
+/*
+
+Raycastable objects must:
+
+Have a named fully-encapsulating data structure with ctor:
+ - MyRaycastable mk_MyRaycastable(...)
+
+Implement the following method signatures:
+ - float hit(in MyRaycastable this, in Ray ray) => returns T such that hit position is ray_at(T)
+ - vec4 normal(in MyRaycastable this, in vec4 global_pos) => returns normalized direction vector perpendicular to the tangent at global_pos
+ - vec4 color(in MyRaycastable this, in Ray ray, in float cachedT) => returns color of object for given ray
+ - vec4 raytrace(in MyRaycastable this, in Ray ray) => returns color for given ray, or transparent if no hit
+
+*/
 
 
 // BEGIN SPHERE
 
+struct Sphere {
+    vec4 center;
+    float radius;
+};
+
+Sphere mk_Sphere(in vec4 center, in float radius) {
+    Sphere s;
+    if(radius > 0. && center.w == 1.) {
+        s.center = center;
+        s.radius = radius;
+    } else {
+        s.center = vec4(0,0,0,1);
+        s.radius = 1.;
+    }
+    return s;
+}
 
 //Does given ray intersect given sphere? If so, at what t such that
 //the global hit location will be ray::at(t)?
-float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
-                 in vec3 sphereCenter, in float sphereRadius) {
-    vec3 relpos = rayOrigin-sphereCenter;
+float hit(in Sphere this, in Ray ray) {
+    vec4 relpos = ray.origin-this.center;
 	
-	float      a = lenSq(rayDirection);
-	float half_b = dot(relpos, rayDirection);
-	float      c = lenSq(relpos) - sq(sphereRadius);
+	float      a = lenSq(ray.direction);
+	float half_b = dot(relpos, ray.direction);
+	float      c = lenSq(relpos) - sq(this.radius);
 	
     float disc = sq(half_b) - a*c;
     
@@ -130,35 +208,31 @@ float sphere_hit(in vec3 rayOrigin, in vec3 rayDirection,
 
 //Get the *outer* normal of the given sphere.
 //Inner normal isn't necessary because inner faces are culled.
-vec3 sphere_normal(in vec3 gPos,
-                   in vec3 sphereCenter, in float sphereRadius) {
-    return normalize(gPos-sphereCenter);
+vec4 normal(in Sphere this, in vec4 global_pos) {
+    return as_direction( (global_pos.xyz-this.center.xyz)/this.radius );
 }
 
 //Get the color of the given sphere, for given ray.
 //Also caches t such that hit location is ray::at(t)
-vec4 sphere_color(in vec3 rayOrigin, in vec3 rayDirection,
-                  in vec3 sphereCenter, in float sphereRadius,
-                  in float cachedT) {
+vec4 color(in Sphere sphere, in Ray ray, in float cachedT) {
     //Pretty-universal variables
-    vec3 hit_gpos = ray_project(rayOrigin, rayDirection, cachedT);
-    vec3 nrm = sphere_normal(hit_gpos, sphereCenter, sphereRadius);
+    vec4 hit_gpos = ray_at(ray, cachedT);
+    vec4 nrm = normal(sphere, hit_gpos);
     
     //Backface culling
-    if(dot(rayDirection, nrm) < 0.) return vec4(0,0,0,0);
+    if(dot(ray.direction, nrm) < 0.) return vec4(0,0,0,0);
     
     //Actual color logic
-    vec4 col = vec4( vec3(.5,.5,1)+nrm*3., 1 );
+    vec4 col = vec4( vec3(.5,.5,1)+nrm.xyz*3., 1 );
     
     return col;
 }
 
 //Raytrace onto a sphere. Calls sphere_hit and (if hit) sphere_color
-vec4 raytrace_sphere(in vec3 rayOrigin, in vec3 rayDirection,
-                     in vec3 sphereCenter, in float sphereRadius) {
-	float hitT = sphere_hit(rayOrigin, rayDirection, sphereCenter, sphereRadius);
+vec4 raytrace(in Sphere sphere, in Ray ray) {
+	float hitT = hit(sphere, ray);
     
-    if(hitT >= 0.) return sphere_color(rayOrigin, rayDirection, sphereCenter, sphereRadius, hitT);
+    if(hitT >= 0.) return color(sphere, ray, hitT);
     else return vec4(0,0,0,0);
 }
 
@@ -170,17 +244,17 @@ vec4 raytrace_sphere(in vec3 rayOrigin, in vec3 rayDirection,
 
 
 //Blend layers based on alpha
-void rt_blend(in vec4 back, in vec4 front, out vec4 result) {
-    result = vec4(mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
+void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
+    result = vec4( mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
 }
 
 //Sample ALL objects in the scene. If you want to add objects, write
 //them in here. Note: there is no Z-testing, so render back-to-front
-vec4 rt_sample_all(in vec3 rayOrigin, in vec3 rayDirection) {
-    vec4 col_out = calcBGColor(rayDirection, rayOrigin);
+vec4 rt_sample_all(in Ray ray) {
+    vec4 col_out = calcBGColor(ray);
     
     //Parametric sphere
-    rt_blend(col_out, raytrace_sphere(rayOrigin, rayDirection, SPHERE_CENTER, SPHERE_RADIUS), col_out);
+    alpha_blend(col_out, raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray), col_out);
     
     return col_out;
 }
@@ -193,8 +267,8 @@ vec4 rt_sample_all(in vec3 rayOrigin, in vec3 rayDirection) {
 
 
 //Sample a pixel using SuperSampled AntiAliasing technique
-//Peter Shirley uses random() calls, but we can't for performance reasons
-//and the fact that it doesn't exist in native GLSL
+//Peter Shirley uses random() calls, but we can't for performance
+//reasons plus it doesn't exist predefined in GLSL
 vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, in int ss_count) {
     float pixel_weight = 1./float(sq(ss_count));
     
@@ -203,16 +277,16 @@ vec4 sample_pixel_ssaa(in vec2 viewport, in float focalLength, in vec2 px_size, 
     
     vec4 pixel_col = vec4(0,0,0,0);
     
-    vec4 rayDirection, rayOrigin;
+    Ray ray;
     for(ivec2 ss_ind = ivec2(0,0); ss_ind.x < ss_count; ++ss_ind.x) for(ss_ind.y = 0; ss_ind.y < ss_count; ++ss_ind.y) {
         //Create sample coordinates from viewport and subsample index
         vec2 sample_coord = mix(neg_corner, pos_corner, (vec2(ss_ind)+vec2(0.5,0.5))/float(ss_count) );
         
         //Ray constructed from those coordinates
-        calcRay(rayDirection, rayOrigin, sample_coord, focalLength);
+        calcRay(ray, sample_coord, focalLength);
         
         //Sample all and add (weighted) to output
-        pixel_col += rt_sample_all(rayOrigin.xyz, rayDirection.xyz);
+        pixel_col += rt_sample_all(ray);
     }
     
     return pixel_col*pixel_weight;
@@ -230,7 +304,6 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord)
     // viewing plane (viewport) info
     vec2 viewport, px_size, ndc, uv, resolutionInv;
     float aspect;
-    const float viewportHeight = 2.0, focalLength = 1.0;
 
     // setup
     calcViewport(viewport, px_size, ndc, uv, aspect, resolutionInv,
