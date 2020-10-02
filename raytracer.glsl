@@ -26,8 +26,11 @@ const float LIGHT_DIST = 20.;
 const vec3  LIGHT_COLOR = vec3(1, 1, 1);
 const float LIGHT_INTENSITY = 16.;
 
-const float HIGHLIGHT_EXP = 64.;
+const float HIGHLIGHT_EXP = 128.;
 const float HIGHLIGHT_OFFSET = 1.2;
+
+const int MAX_LIGHTS = 8;
+
 
 // OBJECT PARAMETERS
 
@@ -65,6 +68,11 @@ GEN_DECLARE(vec4)
 //Square
 #define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
 GEN_DECLARE(int  ) GEN_DECLARE(ivec2) GEN_DECLARE(ivec3) GEN_DECLARE(ivec4)
+GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
+#undef GEN_DECLARE
+
+//Clamp between 0-1
+#define GEN_DECLARE(genType) genType clamp01(in genType v) { return clamp(v, 0., 1.); }
 GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
 #undef GEN_DECLARE
 
@@ -205,14 +213,38 @@ void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3
     //IaCa + CL( IdCd + IsCs )
     
     vec3 IaCa = AMBIENT_INTENSITY*AMBIENT_COLOR;
-    float Id = lambert_diffuse_intensity(light, hit); vec3 Cd = diffuse;
-    float Is = phong_spec_intensity(light, hit, highlight_exp); vec3 Cs = vec3(1,1,1);//*specular;
+    vec3 IdCd = lambert_diffuse_intensity(light, hit)*diffuse;
+    float Is = phong_spec_intensity(light, hit, highlight_exp); vec3 Cs = specular;
     
     //hit.color.rgb = IaCa + light.color.rgb*( IdCd + IsCs );
-    hit.color.rgb = IaCa + light.color.rgb*( mix(vec3(Is), Cs, Id*Cd) );
+    hit.color.rgb = IaCa + light.color.rgb*( mix(vec3(Is), Cs, IdCd) );
 }
 
 // END PHONG MODEL
+
+// BEGIN PARSING MULTIPLE
+
+struct LightingModel {
+    vec4 ambient;
+    PointLight[MAX_LIGHTS] lights;
+};
+
+void phong_multilight(in LightingModel this, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in float highlight_exp) {
+    vec3 color_out = this.ambient.rgb * this.ambient.a;
+    
+    for(int i = 0; i < this.lights.length(); ++i) {
+        PointLight light = this.lights[i];
+        
+        //Phong light boilerplate
+    	vec3 IdCd = lambert_diffuse_intensity(light, hit)*diffuse;
+        float Is = phong_spec_intensity(light, hit, highlight_exp); vec3 Cs = specular;
+        color_out += clamp01(light.color.rgb*( IdCd + Is*Cs ));
+    }
+    
+    hit.color.rgb = color_out;
+}
+
+// END PARSING MULITPLE
 
 // END LIGHTS
 
@@ -324,7 +356,7 @@ vec4 normal(in Sphere this, in vec4 global_pos) {
 }
 
 //Raytrace onto a sphere. Calls sphere_hit and (if hit) sphere_color
-rt_hit raytrace(in Sphere this, in Ray ray, in PointLight light) {
+rt_hit raytrace(in Sphere this, in Ray ray, in LightingModel lighting) {
 	float hitT = hit(this, ray);
     
     if(hitT < 0.) return rt_hit_none();
@@ -336,7 +368,7 @@ rt_hit raytrace(in Sphere this, in Ray ray, in PointLight light) {
         //Actual color logic (currently shows normal)
         hit.color = vec4( vec3(.5,.5,.5)+hit.nrm.xyz*0.7, 1 );
         
-        phong_light(light, hit, hit.color.rgb, hit.color.rgb, HIGHLIGHT_EXP );
+        phong_multilight(lighting, hit, hit.color.rgb, hit.color.rgb, HIGHLIGHT_EXP );
 
         return hit;
     }
@@ -357,20 +389,20 @@ void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
 vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     vec4 col_out = calcBGColor(ray);
     
+    LightingModel lighting;
+    lighting.ambient = vec4(AMBIENT_COLOR, AMBIENT_INTENSITY);
+    
     Sphere sphere = mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS);
     
     //For debugging purposes
-    float mouseT = hit(sphere, rMouse);
-    PointLight light;
-    if(mouseT > 0.) {
-        vec4 hit_pos = ray_at(rMouse, mouseT);
-        light = mk_PointLight(hit_pos+normal(sphere, hit_pos), LIGHT_COLOR, LIGHT_INTENSITY);
-    } else {
-        light = mk_PointLight(vec4(ray_at(rMouse, 1.).xy, 0, 1), LIGHT_COLOR, LIGHT_INTENSITY);
-    }
+    //float mouseT = hit(sphere, rMouse);
+    lighting.lights[0] = mk_PointLight(vec4(ray_at(rMouse, 1.).xy, 0, 1)     , LIGHT_COLOR, LIGHT_INTENSITY/8.);
+    lighting.lights[1] = mk_PointLight(lighting.lights[0].pos*vec4(-1, 1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
+    lighting.lights[2] = mk_PointLight(lighting.lights[0].pos*vec4( 1,-1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
+    lighting.lights[3] = mk_PointLight(lighting.lights[0].pos*vec4(-1,-1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
     
     //Parametric sphere
-    alpha_blend(col_out, raytrace(sphere, ray, light).color, col_out);
+    alpha_blend(col_out, raytrace(sphere, ray, lighting).color, col_out);
     
     return col_out;
 }
