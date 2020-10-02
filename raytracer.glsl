@@ -9,7 +9,7 @@
 const float viewportHeight = 2.0;
 const float focalLength = 1.0;
 
-const int SS_COUNT = 1;
+const int SS_COUNT = 4;
 //#define SS_COUNT int( getDecimalPart(iTime/3.) * 6. + 1. )
 
 const float NEAR_PLANE = 0.1f;
@@ -17,10 +17,17 @@ const float NEAR_PLANE = 0.1f;
 
 // LIGHT PARAMETERS
 
-const vec4  LIGHT_POS = vec4(5, 5, 5.-1.5, 1);
-const vec3  LIGHT_COLOR = vec3(1, 1, 1);
-const float LIGHT_INTENSITY = 6.;
+const vec3  AMBIENT_COLOR = vec3(1, 1, 1);
+const float AMBIENT_INTENSITY = 0.1;
 
+const float LIGHT_DIST = 20.;
+//const vec4  LIGHT_POS = vec4(LIGHT_DIST, LIGHT_DIST, LIGHT_DIST-1.5, 1);
+//#define LIGHT_POS vec4(ray_at(rMouse, 1.).xy, 0, 1)
+const vec3  LIGHT_COLOR = vec3(1, 1, 1);
+const float LIGHT_INTENSITY = 16.;
+
+const float HIGHLIGHT_EXP = 64.;
+const float HIGHLIGHT_OFFSET = 1.2;
 
 // OBJECT PARAMETERS
 
@@ -56,13 +63,16 @@ GEN_DECLARE(vec4)
 #undef GEN_DECLARE
 
 //Square
-float sq(in float v) { return v*v; }
-int   sq(in int   v) { return v*v; }
+#define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
+GEN_DECLARE(int  ) GEN_DECLARE(ivec2) GEN_DECLARE(ivec3) GEN_DECLARE(ivec4)
+GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
+#undef GEN_DECLARE
 
 // END UTLILITY FUNCTIONS
 
 
 // BEGIN LAB 4 BOILERPLATE
+// These snippets were copy-pasted from the assignment main page
 
 // as_point: promote a 3D vector into a 4D vector representing a point (w=1)
 //    point: input 3D vector to be converted into a point
@@ -154,23 +164,55 @@ PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
     return val;
 }
 
+float attenuation_coeff(in float d, in float intensity) {
+    return 1./sq(d/intensity+1.);
+}
+
+// BEGIN LAMBERTIAN MODEL
+
 //BOTH INPUTS MUST BE NORMALIZED
 float lambert_diffuse_coeff(in vec4 light_ray_dir, in vec4 normal) {
     return dot(normal, light_ray_dir);
 }
 
-float attenuation_coeff(in float d, in float intensity) {
-    return 1./sq(d/intensity+1.);
-}
-
 float lambert_diffuse_intensity(in PointLight light, in rt_hit hit) {
-    vec4 posdiff = light.pos-hit.pos;
-    return lambert_diffuse_coeff(posdiff, hit.nrm) * attenuation_coeff(length(posdiff), light.color.a);
+    vec4 light_vector = normalize(light.pos-hit.pos);
+    return lambert_diffuse_coeff(light_vector, hit.nrm) * attenuation_coeff(length(light_vector), light.color.a);
 }
 
 void lambert_light(in PointLight light, inout rt_hit hit) {
     hit.color.rgb = lambert_diffuse_intensity(light, hit) * hit.color.rgb * light.color.rgb;
 }
+
+// END LAMBERTIAN MODEL
+
+// BEGIN PHONG MODEL
+
+float phong_spec_coeff(in PointLight light, in rt_hit hit) {
+    vec4 view_vector = normalize(-hit.pos);
+    vec4 light_vector = normalize(light.pos-hit.pos);
+    //vec4 refl_light_vector = reflect(-light_vector, hit.nrm);
+    vec4 halfway = vec4(normalize(view_vector+light_vector).xyz, 0);
+    return dot(hit.nrm, halfway);
+}
+
+float phong_spec_intensity(in PointLight light, in rt_hit hit, in float highlight_exp) {
+    float k = phong_spec_coeff(light, hit);
+    return pow(k*HIGHLIGHT_OFFSET, highlight_exp);
+}
+
+void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in float highlight_exp) {
+    //IaCa + CL( IdCd + IsCs )
+    
+    vec3 IaCa = AMBIENT_INTENSITY*AMBIENT_COLOR;
+    float Id = lambert_diffuse_intensity(light, hit); vec3 Cd = diffuse;
+    float Is = phong_spec_intensity(light, hit, highlight_exp); vec3 Cs = vec3(1,1,1);//*specular;
+    
+    //hit.color.rgb = IaCa + light.color.rgb*( IdCd + IsCs );
+    hit.color.rgb = IaCa + light.color.rgb*( mix(vec3(Is), Cs, Id*Cd) );
+}
+
+// END PHONG MODEL
 
 // END LIGHTS
 
@@ -294,7 +336,7 @@ rt_hit raytrace(in Sphere this, in Ray ray, in PointLight light) {
         //Actual color logic (currently shows normal)
         hit.color = vec4( vec3(.5,.5,.5)+hit.nrm.xyz*0.7, 1 );
         
-        lambert_light(light, hit);
+        phong_light(light, hit, hit.color.rgb, hit.color.rgb, HIGHLIGHT_EXP );
 
         return hit;
     }
@@ -314,13 +356,21 @@ void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
 //them in here. Note: there is no Z-testing, so render back-to-front
 vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     vec4 col_out = calcBGColor(ray);
-    PointLight light = mk_PointLight(LIGHT_POS, LIGHT_COLOR, LIGHT_INTENSITY);
     
-    //Parametric sphere
-    alpha_blend(col_out, raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, light).color, col_out);
+    Sphere sphere = mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS);
     
     //For debugging purposes
-    //float mouseT = hit(sphere, rMouse);
+    float mouseT = hit(sphere, rMouse);
+    PointLight light;
+    if(mouseT > 0.) {
+        vec4 hit_pos = ray_at(rMouse, mouseT);
+        light = mk_PointLight(hit_pos+normal(sphere, hit_pos), LIGHT_COLOR, LIGHT_INTENSITY);
+    } else {
+        light = mk_PointLight(vec4(ray_at(rMouse, 1.).xy, 0, 1), LIGHT_COLOR, LIGHT_INTENSITY);
+    }
+    
+    //Parametric sphere
+    alpha_blend(col_out, raytrace(sphere, ray, light).color, col_out);
     
     return col_out;
 }
