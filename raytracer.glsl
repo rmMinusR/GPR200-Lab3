@@ -21,12 +21,10 @@ const vec3  AMBIENT_COLOR = vec3(1, 1, 1);
 const float AMBIENT_INTENSITY = 0.1;
 
 const float LIGHT_DIST = 20.;
-//const vec4  LIGHT_POS = vec4(LIGHT_DIST, LIGHT_DIST, LIGHT_DIST-1.5, 1);
-//#define LIGHT_POS vec4(ray_at(rMouse, 1.).xy, 0, 1)
 const vec3  LIGHT_COLOR = vec3(1, 1, 1);
-const float LIGHT_INTENSITY = 16.;
+const float LIGHT_INTENSITY = 12.;
 
-const float HIGHLIGHT_EXP = 128.;
+const int   HIGHLIGHT_EXP = 1 << 8;
 const float HIGHLIGHT_OFFSET = 1.2;
 
 const int MAX_LIGHTS = 8;
@@ -76,6 +74,35 @@ GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
 GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
 #undef GEN_DECLARE
 
+//Integer-power. MUCH faster than pow(float, float)
+/*
+b^x =
+b^(x_0+x_1+...+x_n) =
+b^x_0 * b^x_1 * ... * b^x_n
+All k in x_k are powers of two
+*/
+float ipow(float b, int x) {
+    //Stack representing x, will be interpreted one bit at a time LSB first
+    uint powstack = uint(x);
+    
+    float p2 = b;
+    
+    float val = 1.;
+    while(powstack != uint(0)) {
+        //Pop a bit from remaining power stack
+        bool poppedBit = (powstack&uint(1)) != uint(0);
+        powstack = powstack >> 1;
+        
+        //If bit 0 is on, multiply by this place
+        if(poppedBit) val *= p2;
+        
+        //Powers of b raised to a power of two. (p^q)^2 = p^2q
+        p2 *= p2;
+    }
+    
+    return val;
+}
+    
 // END UTLILITY FUNCTIONS
 
 
@@ -204,20 +231,20 @@ float phong_spec_coeff(in PointLight light, in rt_hit hit) {
     return dot(hit.nrm, halfway);
 }
 
-float phong_spec_intensity(in PointLight light, in rt_hit hit, in float highlight_exp) {
+float phong_spec_intensity(in PointLight light, in rt_hit hit, in int highlight_exp) {
     float k = phong_spec_coeff(light, hit);
-    return pow(k*HIGHLIGHT_OFFSET, highlight_exp);
+    return ipow(k*HIGHLIGHT_OFFSET, highlight_exp);
 }
 
-void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in float highlight_exp) {
+void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in int highlight_exp) {
     //IaCa + CL( IdCd + IsCs )
     
     vec3 IaCa = AMBIENT_INTENSITY*AMBIENT_COLOR;
     vec3 IdCd = lambert_diffuse_intensity(light, hit)*diffuse;
     float Is = phong_spec_intensity(light, hit, highlight_exp); vec3 Cs = specular;
     
-    //hit.color.rgb = IaCa + light.color.rgb*( IdCd + IsCs );
-    hit.color.rgb = IaCa + light.color.rgb*( mix(vec3(Is), Cs, IdCd) );
+    hit.color.rgb = IaCa + light.color.rgb*( IdCd + Is*Cs );
+    //hit.color.rgb = IaCa + light.color.rgb*( mix(vec3(Is), Cs, IdCd) );
 }
 
 // END PHONG MODEL
@@ -227,12 +254,13 @@ void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3
 struct LightingModel {
     vec4 ambient;
     PointLight[MAX_LIGHTS] lights;
+    int light_count; //Should never exceed MAX_LIGHTS
 };
 
-void phong_multilight(in LightingModel this, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in float highlight_exp) {
+void phong_multilight(in LightingModel this, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in int highlight_exp) {
     vec3 color_out = this.ambient.rgb * this.ambient.a;
     
-    for(int i = 0; i < this.lights.length(); ++i) {
+    for(int i = 0; i < this.light_count; ++i) {
         PointLight light = this.lights[i];
         
         //Phong light boilerplate
@@ -391,11 +419,10 @@ vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     
     LightingModel lighting;
     lighting.ambient = vec4(AMBIENT_COLOR, AMBIENT_INTENSITY);
+    lighting.light_count = 4;
     
     Sphere sphere = mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS);
     
-    //For debugging purposes
-    //float mouseT = hit(sphere, rMouse);
     lighting.lights[0] = mk_PointLight(vec4(ray_at(rMouse, 1.).xy, 0, 1)     , LIGHT_COLOR, LIGHT_INTENSITY/8.);
     lighting.lights[1] = mk_PointLight(lighting.lights[0].pos*vec4(-1, 1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
     lighting.lights[2] = mk_PointLight(lighting.lights[0].pos*vec4( 1,-1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
