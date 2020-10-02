@@ -20,20 +20,18 @@ const float NEAR_PLANE = 0.1f;
 const vec3  AMBIENT_COLOR = vec3(1, 1, 1);
 const float AMBIENT_INTENSITY = 0.1;
 
-const float LIGHT_DIST = 20.;
-const vec3  LIGHT_COLOR = vec3(1, 1, 1);
-const float LIGHT_INTENSITY = 12.;
-
 const int   HIGHLIGHT_EXP = 1 << 8;
-const float HIGHLIGHT_OFFSET = 1.2;
+const float HIGHLIGHT_OFFSET = 1.07;
 
 const int MAX_LIGHTS = 8;
+
+const float DEBUG_LIGHT_SPHERE_RADIUS = 0.02f;
 
 
 // OBJECT PARAMETERS
 
 const float SPHERE_RADIUS = 1.;
-const vec4 SPHERE_CENTER = vec4(0, 0, -1.5, 1); //vec4(sin(iTime)/2., cos(iTime)/2., 2.5, 1)
+const vec4 SPHERE_CENTER = vec4(0, 0, -2.5, 1); //vec4(sin(iTime)/2., cos(iTime)/2., 2.5, 1)
 
 
 // BEGIN UTILITY FUNCTIONS
@@ -74,7 +72,7 @@ GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
 GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
 #undef GEN_DECLARE
 
-//Integer-power. MUCH faster than pow(float, float)
+//Integer-power. Significantly faster than pow(float, float)
 /*
 b^x =
 b^(x_0+x_1+...+x_n) =
@@ -82,25 +80,37 @@ b^x_0 * b^x_1 * ... * b^x_n
 All k in x_k are powers of two
 */
 float ipow(float b, int x) {
-    //Stack representing x, will be interpreted one bit at a time LSB first
+    //Acts as a stack representing x, will be interpreted one bit at a time LSB first
     uint powstack = uint(x);
     
+    //Will always be b raised to some power that is a power of two
+    //(p^q)^2 = p^2q
     float p2 = b;
     
+    //The output b^x_0 * ... * b^x_k
     float val = 1.;
+    
+    //Loop until we've reached the last bit (will always be most-significant)
     while(powstack != uint(0)) {
         //Pop a bit from remaining power stack
         bool poppedBit = (powstack&uint(1)) != uint(0);
         powstack = powstack >> 1;
         
-        //If bit 0 is on, multiply by this place
+        //Update output value
         if(poppedBit) val *= p2;
         
-        //Powers of b raised to a power of two. (p^q)^2 = p^2q
+        //Powers of b raised to a power of two.
+        //(p^q)^2 = p^2q
+        //(p^2^k)^2 = p^(2*2^k) = p^2^(k+1)
         p2 *= p2;
     }
     
     return val;
+}
+
+//Blend layers based on alpha
+void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
+    result = vec4( mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
 }
     
 // END UTLILITY FUNCTIONS
@@ -181,6 +191,29 @@ rt_hit rt_hit_none() { rt_hit val; return val; }
 
 bool rt_hit_good(in rt_hit val) { return val.pos.z != 0.; }
 
+//Combo of Z-test and alpha blend
+//SHOULD ONLY BE USED IN rt_sample_all() or composition like raytrace(Multilight)
+rt_hit z_blend(in rt_hit a, in rt_hit b) {
+    if(!rt_hit_good(a)) return b;
+    if(!rt_hit_good(b)) return a;
+    
+    rt_hit close, far;
+    if(a.pos.z > b.pos.z) {
+        close = a;
+        far = b;
+    } else {
+        close = b;
+        far = a;
+    }
+    
+    rt_hit outv;
+    outv.pos = close.pos;
+    outv.nrm = close.nrm;
+    alpha_blend(far.color, close.color, outv.color);
+    
+    return outv;
+}
+
 // END RAYTRACE-HIT DATA STRUCTURE
 
 
@@ -249,15 +282,15 @@ void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3
 
 // END PHONG MODEL
 
-// BEGIN PARSING MULTIPLE
+// BEGIN MULTIPLE LIGHTS
 
-struct LightingModel {
+struct Multilight {
     vec4 ambient;
     PointLight[MAX_LIGHTS] lights;
     int light_count; //Should never exceed MAX_LIGHTS
 };
 
-void phong_multilight(in LightingModel this, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in int highlight_exp) {
+void phong_multilight(in Multilight this, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in int highlight_exp) {
     vec3 color_out = this.ambient.rgb * this.ambient.a;
     
     for(int i = 0; i < this.light_count; ++i) {
@@ -272,7 +305,60 @@ void phong_multilight(in LightingModel this, inout rt_hit hit, in vec3 diffuse, 
     hit.color.rgb = color_out;
 }
 
-// END PARSING MULITPLE
+// END MULITPLE LIGHTS
+
+// BEGIN LIGHT DEBUG DISPLAY
+
+//Copy from Sphere
+float hit(in PointLight this, in Ray ray) {
+    vec4 relpos = ray.origin-this.pos;
+	
+	float      a = lenSq(ray.direction);
+	float half_b = dot(relpos, ray.direction);
+	float      c = lenSq(relpos) - sq(DEBUG_LIGHT_SPHERE_RADIUS);
+	
+    float disc = sq(half_b) - a*c;
+    
+    if(disc < 0.) return -1.;
+    else {
+        return abs( (-half_b-sqrt(disc))/a );
+    }
+}
+
+//Copy from Sphere
+vec4 normal(in PointLight this, in vec4 global_pos) {
+    //return normalize(global_pos-this.center);
+    return (global_pos-this.pos)/DEBUG_LIGHT_SPHERE_RADIUS;
+}
+
+//Copy from Sphere
+rt_hit raytrace(in PointLight this, in Ray ray) {
+	float hitT = hit(this, ray);
+    
+    if(hitT < 0.) return rt_hit_none();
+    else {
+        PREPARE_VARS(hitT);
+        BACKFACE_CULL;
+        NEARPLANE_CULL;
+
+        hit.color.rgb = this.color.rgb;
+        hit.color.a = 0.6;
+
+        return hit;
+    }
+}
+
+//Multiple lights. Tests them all based on Z
+rt_hit raytrace(in Multilight this, in Ray ray) {
+    rt_hit outv;
+    for(int i = 0; i < this.light_count; i++) {
+        rt_hit hit = raytrace(this.lights[i], ray);
+        outv = z_blend(hit, outv);
+    }
+    return outv;
+}
+
+// END LIGHT DEBUG DISPLAY
 
 // END LIGHTS
 
@@ -384,7 +470,7 @@ vec4 normal(in Sphere this, in vec4 global_pos) {
 }
 
 //Raytrace onto a sphere. Calls sphere_hit and (if hit) sphere_color
-rt_hit raytrace(in Sphere this, in Ray ray, in LightingModel lighting) {
+rt_hit raytrace(in Sphere this, in Ray ray, in Multilight lighting) {
 	float hitT = hit(this, ray);
     
     if(hitT < 0.) return rt_hit_none();
@@ -407,30 +493,29 @@ rt_hit raytrace(in Sphere this, in Ray ray, in LightingModel lighting) {
 
 // BEGIN RAYTRACING
 
-//Blend layers based on alpha
-void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
-    result = vec4( mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
-}
-
-//Sample ALL objects in the scene. If you want to add objects, write
-//them in here. Note: there is no Z-testing, so render back-to-front
+//Sample ALL objects in the scene. If you want to add objects, write them in here.
+//Note: There is now Z-testing!
 vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
+    rt_hit outv;
     vec4 col_out = calcBGColor(ray);
     
-    LightingModel lighting;
+    //Lights
+    Multilight lighting;
     lighting.ambient = vec4(AMBIENT_COLOR, AMBIENT_INTENSITY);
-    lighting.light_count = 4;
+    lighting.light_count = 2;
     
-    Sphere sphere = mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS);
-    
-    lighting.lights[0] = mk_PointLight(vec4(ray_at(rMouse, 1.).xy, 0, 1)     , LIGHT_COLOR, LIGHT_INTENSITY/8.);
-    lighting.lights[1] = mk_PointLight(lighting.lights[0].pos*vec4(-1, 1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
-    lighting.lights[2] = mk_PointLight(lighting.lights[0].pos*vec4( 1,-1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
-    lighting.lights[3] = mk_PointLight(lighting.lights[0].pos*vec4(-1,-1,1,1), LIGHT_COLOR, LIGHT_INTENSITY/8.);
+    lighting.lights[0] = mk_PointLight(SPHERE_CENTER+vec4(sin(iTime*1.5), cos(iTime*1.5),           1.5, 0) , vec3(1.0, 0.3, 0.3), 4.);
+    lighting.lights[1] = mk_PointLight(SPHERE_CENTER+vec4( 2.*sin(iTime), sin(iTime*3.5), 2.*cos(iTime), 0) , vec3(0.3, 1.0, 1.0), 4.);
     
     //Parametric sphere
-    alpha_blend(col_out, raytrace(sphere, ray, lighting).color, col_out);
     
+    outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, lighting), outv);
+    outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER+vec4( 1.3,0,0,0)*SPHERE_RADIUS, SPHERE_RADIUS), ray, lighting), outv);
+    outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER+vec4(-1.3,0,0,0)*SPHERE_RADIUS, SPHERE_RADIUS), ray, lighting), outv);
+    
+    outv = z_blend(raytrace(lighting, ray), outv);
+    
+    alpha_blend(col_out, outv.color, col_out);
     return col_out;
 }
 
