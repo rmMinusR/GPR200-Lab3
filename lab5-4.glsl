@@ -1,5 +1,9 @@
 // BEGIN RC'S UTILITY FUNCTIONS
 
+#define PI 3.1415926535
+#define DEG2RAD (PI/360.)
+#define RAD2DEG (360./PI)
+
 //I want to be able to use the "this" keyword
 #define this _this
 
@@ -71,7 +75,38 @@ float ipow(float b, int x) {
     
     return val;
 }
-    
+
+// BEGIN ROTATIONS
+
+vec4 rotateX(in vec4 v, in float ang) {
+    return vec4(
+    	v.x,
+        v.y*cos(ang)-v.z*sin(ang),
+        v.y*sin(ang)+v.z*cos(ang),
+        v.w
+    );
+}
+
+vec4 rotateY(in vec4 v, in float ang) {
+    return vec4(
+    	v.x*cos(ang)+v.z*sin(ang),
+        v.y,
+        -v.x*sin(ang)+v.z*cos(ang),
+        v.w
+    );
+}
+
+vec4 rotateZ(in vec4 v, in float ang) {
+    return vec4(
+    	v.x*cos(ang)-v.y*sin(ang),
+        v.x*sin(ang)+v.y*cos(ang),
+        v.z,
+        v.w
+    );
+}
+
+// END ROTATIONS
+
 // END RC'S UTILITY FUNCTIONS
 
 // BEGIN LAB 5 GLSL STARTER CODE BY DANIEL S. BUCKSTEIN
@@ -227,7 +262,7 @@ void initRayOrtho(out sRay ray,
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray)
 {
-    return texture(iChannel0, ray.direction.xyz);
+    return texture(iChannel0, rotateY(ray.direction, iTime*DEG2RAD*45.).xyz);
 }
 
 // END RENDERING FUNCTIONS
