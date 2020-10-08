@@ -222,8 +222,21 @@ void initRayOrtho(out sRay ray,
 
 // BEGIN RENDERING FUNCTIONS
 
-// crossFade
+// getRes: returns a 2D vector with the channel's resolution
+//    i: number of the channel
+sDCoord getRes(in int i)
+{
+    return iChannelResolution[i].xy;
+}
 
+// getRatio: returns a float with the ratio of the
+// channel's resolution to the viewport's resolution
+//    res: resolution of the channel
+//    vp:  viewport info structure
+sScalar getRatio(in sDCoord res, in sViewport vp)
+{
+    return res.y * vp.resolutionInv.y;
+}
 
 // calcCoord: calculates the coordinates to display a 2D image
 //    px:    current pixel coordinate
@@ -234,24 +247,19 @@ sCoord calcCoord(in sCoord px, in sDCoord res, in sScalar ratio)
     return (px / res) * ratio;
 }
 
-// wave: distorts a 2D image with a wave effect
-//    originLoc: 2D coordinate to be distorted
-void wave(inout sCoord originLoc)
-{
-    originLoc.x += sin(originLoc.y * 5.0 + iTime) / 2.0;
-}
-
 // calcColor: calculate the color of current pixel
 //	  vp:  input viewport info
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray)
 {
-    sCoord px = vp.pixelCoord;
-    sDCoord res = iChannelResolution[0].xy;
-    sScalar ratio = res.y * vp.resolutionInv.y;
-    color4 chan0 = texture(iChannel0, calcCoord(px, res, ratio));
-    color4 chan1 = texture(iChannel1, calcCoord(px, res, ratio));
-    return mix(chan0, chan1, (sin(iTime) + 1.0) / 2.0);
+    sCoord px = vp.pixelCoord; // gets the current pixel
+    sDCoord res0 = getRes(0);
+    sDCoord res1 = getRes(1);
+    sScalar ratio0 = getRatio(res0, vp);
+    sScalar ratio1 = getRatio(res1, vp);
+    color4 chan0 = texture(iChannel0, calcCoord(px, res0, ratio0));
+    color4 chan1 = texture(iChannel1, calcCoord(px, res1, ratio1));
+    return mix(chan0, chan1, (sin(iTime * 1.5) + 1.0) / 2.0); // mixes the two textures based on the time
 }
 
 // END RENDERING FUNCTIONS
