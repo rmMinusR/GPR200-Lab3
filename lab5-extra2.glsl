@@ -36,6 +36,8 @@ const vec4 SPHERE_CENTER = vec4(0, 0, -2.5, 1); //vec4(sin(iTime)/2., cos(iTime)
 
 // BEGIN UTILITY FUNCTIONS
 
+#define PI 3.1415926535
+
 //I want to be able to use the "this" keyword
 #define this _this
 
@@ -114,9 +116,11 @@ void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
 }
 
 //Variant of atan that correctly interprets values where x,y<0
+//Taken from Wikipedia
 float atan2(in float y, in float x) {
-    float base = atan(y/x);
-    return (y>=0.)?base:(180.+base);
+    float base = atan(y/x); //Between -PI to +PI
+    if(x < 0.) base += PI;
+    return base;
 }
 
 // END UTLILITY FUNCTIONS
@@ -475,17 +479,17 @@ vec4 normal(in Sphere this, in vec4 global_pos) {
     return (global_pos-this.center)/this.radius;
 }
 
-//Get the texture coordinate of the given sphere.
+//Get the texture coordinate of the given sphere, bounded 0-1
 vec2 getTexCoords(in Sphere this, in vec4 global_pos) {
     vec4 local_pos = global_pos-this.center;
     vec2 val;
     
     //FIXME Terribly inefficient
-    val.s = atan2(local_pos.z, local_pos.x); // azimuth
-    val.t = atan2(local_pos.y, length(local_pos.xz)); // elevation
+    val.s = atan2(local_pos.z,        local_pos.x  ) / PI / 2. + 0.5; // azimuth
+    val.t = atan2(local_pos.y, length(local_pos.xz)) / PI / 2. + 0.5; // elevation
     
     //Make it turn with time. Equivalent to (val.s+iTime/2.)%1.
-    val.s = getDecimalPart(val.s+iTime/2.);
+    val.s = getDecimalPart(val.s+iTime/5.);
     
     return val;
 }
@@ -502,6 +506,9 @@ rt_hit raytrace(in Sphere this, in Ray ray, in Multilight lighting) {
 
         //Set the color by sampling the texture in iChannel0
         hit.color = texture(iChannel0, getTexCoords(this, hit.pos));
+        
+        //Debug: Show texture coordinates
+        //hit.color = vec4(getTexCoords(this, hit.pos), 0, 1);
         
         //Apply lighting
         phong_multilight(lighting, hit, hit.color.rgb, hit.color.rgb, HIGHLIGHT_EXP );
@@ -531,8 +538,8 @@ vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     
     //Parametric sphere
     
-    outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, lighting), outv);
-    //outv = z_blend(raytrace(mk_Sphere(ray_at(rMouse, 2.5), SPHERE_RADIUS), ray, lighting), outv);
+    //outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, lighting), outv);
+    outv = z_blend(raytrace(mk_Sphere(ray_at(rMouse, 2.5), SPHERE_RADIUS), ray, lighting), outv);
     
     outv = z_blend(raytrace(lighting, ray), outv);
     
