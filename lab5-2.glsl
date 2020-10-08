@@ -1,9 +1,5 @@
 // BEGIN RC'S UTILITY FUNCTIONS
 
-#define PI 3.1415926535
-#define DEG2RAD (PI/360.)
-#define RAD2DEG (360./PI)
-
 //I want to be able to use the "this" keyword
 #define this _this
 
@@ -75,38 +71,7 @@ float ipow(float b, int x) {
     
     return val;
 }
-
-// BEGIN ROTATIONS
-
-vec4 rotateX(in vec4 v, in float ang) {
-    return vec4(
-    	v.x,
-        v.y*cos(ang)-v.z*sin(ang),
-        v.y*sin(ang)+v.z*cos(ang),
-        v.w
-    );
-}
-
-vec4 rotateY(in vec4 v, in float ang) {
-    return vec4(
-    	v.x*cos(ang)+v.z*sin(ang),
-        v.y,
-        -v.x*sin(ang)+v.z*cos(ang),
-        v.w
-    );
-}
-
-vec4 rotateZ(in vec4 v, in float ang) {
-    return vec4(
-    	v.x*cos(ang)-v.y*sin(ang),
-        v.x*sin(ang)+v.y*cos(ang),
-        v.z,
-        v.w
-    );
-}
-
-// END ROTATIONS
-
+    
 // END RC'S UTILITY FUNCTIONS
 
 // BEGIN LAB 5 GLSL STARTER CODE BY DANIEL S. BUCKSTEIN
@@ -257,12 +222,60 @@ void initRayOrtho(out sRay ray,
 
 // BEGIN RENDERING FUNCTIONS
 
+// BEGIN RENDERING FUNCTIONS
+
+// getRes: returns a 2D vector with the channel's resolution
+//    i: number of the channel
+sDCoord getRes(in int i)
+{
+    return iChannelResolution[i].xy;
+}
+
+// getRatio: returns a float with the ratio of the
+// channel's resolution to the viewport's resolution
+//    res: resolution of the channel
+//    vp:  viewport info structure
+sScalar getRatio(in sDCoord res, in sViewport vp)
+{
+    return res.y * vp.resolutionInv.y;
+}
+
+// calcCoord: calculates the coordinates to display a 2D image
+//    px:    current pixel coordinate
+//    res:   coordinate system of 2D image's resolution
+//    ratio: ratio of image resolution to screen resolution
+sCoord calcCoord(in sCoord px, in sDCoord res, in sScalar ratio)
+{
+    return (px / res) * ratio;
+}
+
+// wave: distorts a 2D image with a wave effect
+//    originLoc: 2D coordinate to be distorted
+void wave(inout sCoord originLoc)
+{
+    originLoc.x += sin(originLoc.y * 5.0 + iTime) / 2.0;
+}
+
 // calcColor: calculate the color of current pixel
 //	  vp:  input viewport info
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray)
 {
-    return texture(iChannel0, rotateY(ray.direction, iTime*DEG2RAD*45.).xyz);
+    sCoord px = vp.pixelCoord; // gets the current pixel's coordinates
+    sDCoord res = getRes(0); // gets the texture's resolution
+    sScalar ratio = getRatio(res, vp); // gets the ratio of the two resolutions
+    int distort = 0; // 0 for still image, anything else to distort
+    
+    if (distort == 0) // checks if want to distort image
+    {
+    	return texture(iChannel0, calcCoord(px, res, ratio)); // returns the texture as a still image
+    }
+    else
+    {
+    	sCoord uv = vp.pixelCoord / iResolution.xy; // converts the coordinate to a uv
+    	wave(uv); // distorts the coordinate
+    	return texture(iChannel0, uv); // returns the texture as a distorted image
+    }
 }
 
 // END RENDERING FUNCTIONS
