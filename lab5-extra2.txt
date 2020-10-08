@@ -479,10 +479,14 @@ vec4 normal(in Sphere this, in vec4 global_pos) {
 vec2 getTexCoords(in Sphere this, in vec4 global_pos) {
     vec4 local_pos = global_pos-this.center;
     vec2 val;
+    
     //FIXME Terribly inefficient
     val.s = atan2(local_pos.z, local_pos.x); // azimuth
     val.t = atan2(local_pos.y, length(local_pos.xz)); // elevation
+    
+    //Make it turn with time. Equivalent to (val.s+iTime/2.)%1.
     val.s = getDecimalPart(val.s+iTime/2.);
+    
     return val;
 }
 
@@ -496,10 +500,10 @@ rt_hit raytrace(in Sphere this, in Ray ray, in Multilight lighting) {
         BACKFACE_CULL;
         NEARPLANE_CULL;
 
-        //Actual color logic (currently shows normal)
+        //Set the color by sampling the texture in iChannel0
         hit.color = texture(iChannel0, getTexCoords(this, hit.pos));
-        //hit.color = vec4( vec3(.5,.5,.5)+hit.nrm.xyz*0.7, 1 );
         
+        //Apply lighting
         phong_multilight(lighting, hit, hit.color.rgb, hit.color.rgb, HIGHLIGHT_EXP );
 
         return hit;
@@ -527,8 +531,8 @@ vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     
     //Parametric sphere
     
-    //outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, lighting), outv);
-    outv = z_blend(raytrace(mk_Sphere(ray_at(rMouse, 2.5), SPHERE_RADIUS), ray, lighting), outv);
+    outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, lighting), outv);
+    //outv = z_blend(raytrace(mk_Sphere(ray_at(rMouse, 2.5), SPHERE_RADIUS), ray, lighting), outv);
     
     outv = z_blend(raytrace(lighting, ray), outv);
     
