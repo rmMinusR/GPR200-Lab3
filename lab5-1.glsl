@@ -252,14 +252,14 @@ sCoord calcCoord(in sCoord px, in sDCoord res, in sScalar ratio)
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray)
 {
-    sCoord px = vp.pixelCoord; // gets the current pixel
-    sDCoord res0 = getRes(0);
-    sDCoord res1 = getRes(1);
-    sScalar ratio0 = getRatio(res0, vp);
-    sScalar ratio1 = getRatio(res1, vp);
-    color4 chan0 = texture(iChannel0, calcCoord(px, res0, ratio0));
-    color4 chan1 = texture(iChannel1, calcCoord(px, res1, ratio1));
-    return mix(chan0, chan1, (sin(iTime * 1.5) + 1.0) / 2.0); // mixes the two textures based on the time
+    sCoord px = vp.pixelCoord; // gets the current pixel's coordinates
+    sDCoord res0 = getRes(0); // gets iChannel0's resolution
+    sDCoord res1 = getRes(1); // gets iChannel1's resolution
+    sScalar ratio0 = getRatio(res0, vp); // gets the ratio of iChannel0 and screen resolutions
+    sScalar ratio1 = getRatio(res1, vp); // gets the ratio of iChannel1 and screen resolutions
+    color4 chan0 = texture(iChannel0, calcCoord(px, res0, ratio0)); // stores the texture as a vec4 for mixing
+    color4 chan1 = texture(iChannel1, calcCoord(px, res1, ratio1)); // stores the texture as a vec4 for mixing
+    return mix(chan0, chan1, (sin(iTime * 1.5) + 1.0) / 2.0); // crossfades the two textures based on the time
 }
 
 // END RENDERING FUNCTIONS

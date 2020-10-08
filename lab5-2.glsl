@@ -222,6 +222,24 @@ void initRayOrtho(out sRay ray,
 
 // BEGIN RENDERING FUNCTIONS
 
+// BEGIN RENDERING FUNCTIONS
+
+// getRes: returns a 2D vector with the channel's resolution
+//    i: number of the channel
+sDCoord getRes(in int i)
+{
+    return iChannelResolution[i].xy;
+}
+
+// getRatio: returns a float with the ratio of the
+// channel's resolution to the viewport's resolution
+//    res: resolution of the channel
+//    vp:  viewport info structure
+sScalar getRatio(in sDCoord res, in sViewport vp)
+{
+    return res.y * vp.resolutionInv.y;
+}
+
 // calcCoord: calculates the coordinates to display a 2D image
 //    px:    current pixel coordinate
 //    res:   coordinate system of 2D image's resolution
@@ -243,14 +261,21 @@ void wave(inout sCoord originLoc)
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray)
 {
-    sCoord px = vp.pixelCoord;
-    sDCoord res = iChannelResolution[0].xy;
-    sScalar ratio = res.y * vp.resolutionInv.y;
-    return texture(iChannel0, calcCoord(px, res, ratio));
+    sCoord px = vp.pixelCoord; // gets the current pixel's coordinates
+    sDCoord res = getRes(0); // gets the texture's resolution
+    sScalar ratio = getRatio(res, vp); // gets the ratio of the two resolutions
+    int distort = 0; // 0 for still image, anything else to distort
     
-    sCoord uv = vp.pixelCoord / iResolution.xy;
-    wave(uv);
-    return texture(iChannel0, uv);
+    if (distort == 0) // checks if want to distort image
+    {
+    	return texture(iChannel0, calcCoord(px, res, ratio)); // returns the texture as a still image
+    }
+    else
+    {
+    	sCoord uv = vp.pixelCoord / iResolution.xy; // converts the coordinate to a uv
+    	wave(uv); // distorts the coordinate
+    	return texture(iChannel0, uv); // returns the texture as a distorted image
+    }
 }
 
 // END RENDERING FUNCTIONS
