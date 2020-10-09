@@ -1,3 +1,8 @@
+/*
+   Lab 5 part 3 by Robert Christensen
+   With contributions by Daniel S. Buckstein
+*/
+
 // BEGIN RC'S UTILITY FUNCTIONS
 
 #define PI 3.1415926535
@@ -7,38 +12,12 @@
 //I want to be able to use the "this" keyword
 #define this _this
 
-//Float range remap. Now no longer an eeevil macro thanks to preprocessor!
-#define GEN_DECLARE(genType) genType fmap(in genType v, in genType lo1, in genType hi1, in genType lo2, in genType hi2) { return (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2; }
-GEN_DECLARE(float)
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
-    
 //Strip the integer part, return only the decimal part.
 float getDecimalPart(in float x) {
     return x>0.?
         x-float(int(x)):
     	x-float(int(x))+1.;
 }
-
-//Length squared helper function
-#define GEN_DECLARE(genType) float lenSq(in genType v) { return dot(v,v); }
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
-
-//Square
-#define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
-GEN_DECLARE(int  ) GEN_DECLARE(ivec2) GEN_DECLARE(ivec3) GEN_DECLARE(ivec4)
-GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
-#undef GEN_DECLARE
-
-//Clamp between 0-1
-#define GEN_DECLARE(genType) genType clamp01(in genType v) { return clamp(v, 0., 1.); }
-GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
-#undef GEN_DECLARE
 
 //Integer-power. Significantly faster than pow(float, float)
 /*
@@ -142,13 +121,6 @@ sPoint asPoint(in sBasis v) { return sPoint(v, 1.0); }
 
 // asVector: promote a 3D vector into a 4D vector representing a vector through space (w=0)
 sVector asVector(in sBasis v) { return sVector(v, 0.0); }
-
-// lengthSq: calculate the squared length of a vector type
-#define GEN_DECLARE(genType) float lengthSq(in genType x) { return dot(x, x); }
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
 
 // END DB'S UTILITY FUNCTIONS
     

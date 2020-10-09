@@ -1,7 +1,11 @@
-/**
- * GPU raycaster
- * Copyright Robert Christensen and Dan Buckstein
- * No license - all rights reserved
+/*
+   Lab 5 extra credit 2 by Robert Christensen
+   With contributions by Dan Buckstein and Peter Shirley
+   
+   Note: This is a modified version of my Lab 4 submission.
+   For the differences, look at the following functions:
+    - getTexCoords(Sphere, vec4)
+    - raytrace(Spehre, Ray, Multilight)
  */
 
 // CAMERA PARAMETERS
@@ -40,14 +44,6 @@ const vec4 SPHERE_CENTER = vec4(0, 0, -2.5, 1); //vec4(sin(iTime)/2., cos(iTime)
 
 //I want to be able to use the "this" keyword
 #define this _this
-
-//Float range remap. Now no longer an eeevil macro thanks to preprocessor!
-#define GEN_DECLARE(genType) genType fmap(in genType v, in genType lo1, in genType hi1, in genType lo2, in genType hi2) { return (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2; }
-GEN_DECLARE(float)
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
 
 //Strip the integer part, return only the decimal part.
 float getDecimalPart(in float x) {
@@ -204,9 +200,11 @@ bool rt_hit_good(in rt_hit val) { return val.pos.z != 0.; }
 //Combo of Z-test and alpha blend
 //SHOULD ONLY BE USED IN rt_sample_all() or composition like raytrace(Multilight)
 rt_hit z_blend(in rt_hit a, in rt_hit b) {
+    //If either is no-hit return the other
     if(!rt_hit_good(a)) return b;
     if(!rt_hit_good(b)) return a;
     
+    //Both are valid, find the closer
     rt_hit close, far;
     if(a.pos.z > b.pos.z) {
         close = a;
@@ -216,6 +214,7 @@ rt_hit z_blend(in rt_hit a, in rt_hit b) {
         far = a;
     }
     
+    //Do an alpha-blend with fg=close bg=far
     rt_hit outv;
     outv.pos = close.pos;
     outv.nrm = close.nrm;
@@ -229,11 +228,13 @@ rt_hit z_blend(in rt_hit a, in rt_hit b) {
 
 // BEGIN LIGHTS
 
+//Represents one point-light
 struct PointLight {
     vec4 pos;
     vec4 color; //W/A used as intensity
 };
 
+//PointLight constructor
 PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
     PointLight val;
     val.pos = as_point(center.xyz);
@@ -242,30 +243,35 @@ PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
     return val;
 }
 
+//Attenuation due to distance falloff
 float attenuation_coeff(in float d, in float intensity) {
     return 1./sq(d/intensity+1.);
 }
 
 // BEGIN LAMBERTIAN MODEL
 
+//Lambertian diffuse coefficient
 //BOTH INPUTS MUST BE NORMALIZED
 float lambert_diffuse_coeff(in vec4 light_ray_dir, in vec4 normal) {
     return dot(normal, light_ray_dir);
 }
 
+//Lambertian diffuse intensity
 float lambert_diffuse_intensity(in PointLight light, in rt_hit hit) {
     vec4 light_vector = normalize(light.pos-hit.pos);
     return lambert_diffuse_coeff(light_vector, hit.nrm) * attenuation_coeff(length(light_vector), light.color.a);
 }
 
+//Apply Lambertian lighting to the given rt_hit
 void lambert_light(in PointLight light, inout rt_hit hit) {
     hit.color.rgb = lambert_diffuse_intensity(light, hit) * hit.color.rgb * light.color.rgb;
 }
 
 // END LAMBERTIAN MODEL
 
-// BEGIN PHONG MODEL
+// BEGIN BLINN-PHONG MODEL
 
+//Blinn-Phong specular coefficient
 float phong_spec_coeff(in PointLight light, in rt_hit hit) {
     vec4 view_vector = normalize(-hit.pos);
     vec4 light_vector = normalize(light.pos-hit.pos);
@@ -274,11 +280,13 @@ float phong_spec_coeff(in PointLight light, in rt_hit hit) {
     return dot(hit.nrm, halfway);
 }
 
+//Blinn-Phong specular intensity
 float phong_spec_intensity(in PointLight light, in rt_hit hit, in int highlight_exp) {
     float k = phong_spec_coeff(light, hit);
     return ipow(k*HIGHLIGHT_OFFSET, highlight_exp);
 }
 
+//Apply Blinn-Phong lighting model to the given rt_hit
 void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in int highlight_exp) {
     //IaCa + CL( IdCd + IsCs )
     
@@ -290,7 +298,7 @@ void phong_light(in PointLight light, inout rt_hit hit, in vec3 diffuse, in vec3
     //hit.color.rgb = IaCa + light.color.rgb*( mix(vec3(Is), Cs, IdCd) );
 }
 
-// END PHONG MODEL
+// END BLINN-PHONG MODEL
 
 // BEGIN MULTIPLE LIGHTS
 
@@ -479,17 +487,18 @@ vec4 normal(in Sphere this, in vec4 global_pos) {
     return (global_pos-this.center)/this.radius;
 }
 
-//Get the texture coordinate of the given sphere, bounded 0-1
+//Get the texture coordinate on the given sphere, bounded 0-1
 vec2 getTexCoords(in Sphere this, in vec4 global_pos) {
     vec4 local_pos = global_pos-this.center;
     vec2 val;
     
+    //Calculate azimuth and elevation / pitch and yaw
     //FIXME Terribly inefficient
-    val.s = atan2(local_pos.z,        local_pos.x  ) / PI / 2. + 0.5; // azimuth
-    val.t = atan2(local_pos.y, length(local_pos.xz)) / PI / 2. + 0.5; // elevation
+    val.x = atan2(local_pos.z,        local_pos.x  ) / PI / 2. + 0.5; // azimuth
+    val.y = atan2(local_pos.y, length(local_pos.xz)) / PI / 2. + 0.5; // elevation
     
     //Make it turn with time. Equivalent to (val.s+iTime/2.)%1.
-    val.s = getDecimalPart(val.s+iTime/5.);
+    val.x = getDecimalPart(val.s+iTime/5.);
     
     return val;
 }
@@ -528,7 +537,7 @@ vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     rt_hit outv;
     vec4 col_out = calcBGColor(ray);
     
-    //Lights
+    //Set up lights
     Multilight lighting;
     lighting.ambient = vec4(AMBIENT_COLOR, AMBIENT_INTENSITY);
     lighting.light_count = 2;
@@ -537,12 +546,13 @@ vec4 rt_sample_all(in Ray ray, in Ray rMouse) {
     lighting.lights[1] = mk_PointLight(SPHERE_CENTER+vec4( 2.*sin(iTime), sin(iTime*3.5), 2.*cos(iTime), 0) , vec3(0.6, 1.0, 1.0), 4.);
     
     //Parametric sphere
-    
     //outv = z_blend(raytrace(mk_Sphere(SPHERE_CENTER, SPHERE_RADIUS), ray, lighting), outv);
     outv = z_blend(raytrace(mk_Sphere(ray_at(rMouse, 2.5), SPHERE_RADIUS), ray, lighting), outv);
     
+    //Show debug lights
     outv = z_blend(raytrace(lighting, ray), outv);
     
+    //If any alpha is left, blend it as sky
     alpha_blend(col_out, outv.color, col_out);
     return col_out;
 }

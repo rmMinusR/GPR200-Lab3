@@ -1,3 +1,8 @@
+/*
+   Lab 5 extra credit 3 by Sean Sawyers-Abbott
+   With contributions by Dan Buckstein and Robert Christensen
+ */
+
 // BEGIN RC'S UTILITY FUNCTIONS
 
 #define PI 3.1415926535
@@ -6,75 +11,6 @@
 
 //I want to be able to use the "this" keyword
 #define this _this
-
-//Float range remap. Now no longer an eeevil macro thanks to preprocessor!
-#define GEN_DECLARE(genType) genType fmap(in genType v, in genType lo1, in genType hi1, in genType lo2, in genType hi2) { return (v-lo1)*(hi1-lo1)*(hi2-lo2)+lo2; }
-GEN_DECLARE(float)
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
-    
-//Strip the integer part, return only the decimal part.
-float getDecimalPart(in float x) {
-    return x>0.?
-        x-float(int(x)):
-    	x-float(int(x))+1.;
-}
-
-//Length squared helper function
-#define GEN_DECLARE(genType) float lenSq(in genType v) { return dot(v,v); }
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
-
-//Square
-#define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
-GEN_DECLARE(int  ) GEN_DECLARE(ivec2) GEN_DECLARE(ivec3) GEN_DECLARE(ivec4)
-GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
-#undef GEN_DECLARE
-
-//Clamp between 0-1
-#define GEN_DECLARE(genType) genType clamp01(in genType v) { return clamp(v, 0., 1.); }
-GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
-#undef GEN_DECLARE
-
-//Integer-power. Significantly faster than pow(float, float)
-/*
-b^x =
-b^(x_0+x_1+...+x_n) =
-b^x_0 * b^x_1 * ... * b^x_n
-All k in x_k are powers of two
-*/
-float ipow(float b, int x) {
-    //Acts as a stack representing x, will be interpreted one bit at a time LSB first
-    uint powstack = uint(x);
-    
-    //Will always be b raised to some power that is a power of two
-    //(p^q)^2 = p^2q
-    float p2 = b;
-    
-    //The output b^x_0 * ... * b^x_k
-    float val = 1.;
-    
-    //Loop until we've reached the last bit (will always be most-significant)
-    while(powstack != uint(0)) {
-        //Pop a bit from remaining power stack
-        bool poppedBit = (powstack&uint(1)) != uint(0);
-        powstack = powstack >> 1;
-        
-        //Update output value
-        if(poppedBit) val *= p2;
-        
-        //Powers of b raised to a power of two.
-        //(p^q)^2 = p^2q
-        //(p^2^k)^2 = p^(2*2^k) = p^2^(k+1)
-        p2 *= p2;
-    }
-    
-    return val;
-}
 
 // BEGIN ROTATIONS
 
@@ -255,7 +191,7 @@ void initRayOrtho(out sRay ray,
 
 // END LAB 5 BOILERPLATE
 
-// BEGIN RENDERING FUNCTIONS
+// BEGIN RENDERING
 
 // calcColor: calculate the color of current pixel
 //	  vp:  input viewport info
@@ -270,7 +206,7 @@ color4 calcColor(in sViewport vp, in sViewport mouseVp, in sRay ray)
     return texture(iChannel0, rotation.xyz);
 }
 
-// END RENDERING FUNCTIONS
+// END RENDERING
 
 //------------------------------------------------------------
 // SHADERTOY MAIN

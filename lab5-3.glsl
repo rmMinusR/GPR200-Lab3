@@ -1,3 +1,8 @@
+/*
+   Lab 5 part 3 by Robert Christensen
+   With contributions by Daniel S. Buckstein
+*/
+
 // BEGIN TYPE ALIASES
 
 // sScalar: alias for a 1D scalar (non-vector)
@@ -24,21 +29,19 @@
 
 // BEGIN SETTINGS
 
-#define PI 3.1415926535
-#define DEG2RAD (PI/360.)
-#define RAD2DEG (360./PI)
-
 const color3 AMBIENT_COLOR     = color3(0, 1, 1);
 const float  AMBIENT_INTENSITY = 0.3;
 
 const color3 LIGHT_COLOR = color3(1, 0, 0);
 const float  LIGHT_INTENSITY = 32.;
 
-const int MAX_LIGHTS = 8;
-
 // END SETTINGS
 
 // BEGIN RC'S UTILITY FUNCTIONS
+
+#define PI 3.1415926535
+#define DEG2RAD (PI/360.)
+#define RAD2DEG (360./PI)
 
 //I want to be able to use the "this" keyword
 #define this _this
@@ -50,29 +53,10 @@ GEN_DECLARE(vec2)
 GEN_DECLARE(vec3)
 GEN_DECLARE(vec4)
 #undef GEN_DECLARE
-    
-//Strip the integer part, return only the decimal part.
-float getDecimalPart(in float x) {
-    return x>0.?
-        x-float(int(x)):
-    	x-float(int(x))+1.;
-}
-
-//Length squared helper function
-#define GEN_DECLARE(genType) float lenSq(in genType v) { return dot(v,v); }
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
 
 //Square
 #define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
 GEN_DECLARE(int  ) GEN_DECLARE(ivec2) GEN_DECLARE(ivec3) GEN_DECLARE(ivec4)
-GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
-#undef GEN_DECLARE
-
-//Clamp between 0-1
-#define GEN_DECLARE(genType) genType clamp01(in genType v) { return clamp(v, 0., 1.); }
 GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
 #undef GEN_DECLARE
 
@@ -112,37 +96,6 @@ float ipow(float b, int x) {
     return val;
 }
 
-// BEGIN ROTATIONS
-
-vec4 rotateX(in vec4 v, in float ang) {
-    return vec4(
-    	v.x,
-        v.y*cos(ang)-v.z*sin(ang),
-        v.y*sin(ang)+v.z*cos(ang),
-        v.w
-    );
-}
-
-vec4 rotateY(in vec4 v, in float ang) {
-    return vec4(
-    	v.x*cos(ang)+v.z*sin(ang),
-        v.y,
-        -v.x*sin(ang)+v.z*cos(ang),
-        v.w
-    );
-}
-
-vec4 rotateZ(in vec4 v, in float ang) {
-    return vec4(
-    	v.x*cos(ang)-v.y*sin(ang),
-        v.x*sin(ang)+v.y*cos(ang),
-        v.z,
-        v.w
-    );
-}
-
-// END ROTATIONS
-
 // END RC'S UTILITY FUNCTIONS
 
 // BEGIN LAB 5 GLSL STARTER CODE BY DANIEL S. BUCKSTEIN
@@ -156,13 +109,6 @@ sPoint asPoint(in sBasis v) { return sPoint(v, 1.0); }
 // asVector: promote a 3D vector into a 4D vector representing a vector through space (w=0)
 sVector asVector(in sBasis v) { return sVector(v, 0.0); }
 #define as_vector(x) asVector(x)
-
-// lengthSq: calculate the squared length of a vector type
-#define GEN_DECLARE(genType) float lengthSq(in genType x) { return dot(x, x); }
-GEN_DECLARE(vec2)
-GEN_DECLARE(vec3)
-GEN_DECLARE(vec4)
-#undef GEN_DECLARE
 
 // END DB'S UTILITY FUNCTIONS
     
@@ -281,11 +227,13 @@ struct rt_hit {
     color4 color;
 };
 
+//Represents a single point light
 struct PointLight {
     vec4 pos;
     vec4 color; //W/A used as intensity
 };
 
+//PointLight ctor
 PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
     PointLight val;
     val.pos = as_point(center.xyz);
@@ -294,30 +242,35 @@ PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
     return val;
 }
 
+//Attenuation coefficient due to light distance
 float attenuation_coeff(in float d, in float intensity) {
     return 1./sq(d/intensity+1.);
 }
 
 // BEGIN LAMBERTIAN MODEL
 
+//Lambertian diffuse coefficient
 //BOTH INPUTS MUST BE NORMALIZED
 float lambert_diffuse_coeff(in vec4 light_ray_dir, in vec4 normal) {
     return dot(normal, light_ray_dir);
 }
 
+//Lambertian diffuse intensity
 float lambert_diffuse_intensity(in PointLight light, in rt_hit hit) {
     vec4 light_vector = normalize(light.pos-hit.pos);
     return lambert_diffuse_coeff(light_vector, hit.nrm) * attenuation_coeff(length(light_vector), light.color.a);
 }
 
+//Performs Lambertian lighting on the given rt_hit
 void lambert_light(in PointLight light, inout rt_hit hit) {
     hit.color.rgb = lambert_diffuse_intensity(light, hit) * hit.color.rgb * light.color.rgb;
 }
 
 // END LAMBERTIAN MODEL
 
-// BEGIN PHONG MODEL
+// BEGIN BLINN-PHONG MODEL
 
+//Blinn-Phong specular coefficient
 float phong_spec_coeff(in PointLight light, in rt_hit hit) {
     vec4 view_vector = normalize(-hit.pos);
     vec4 light_vector = normalize(light.pos-hit.pos);
@@ -326,11 +279,13 @@ float phong_spec_coeff(in PointLight light, in rt_hit hit) {
     return dot(hit.nrm, halfway);
 }
 
+//Blinn-Phong specular intensity
 float phong_spec_intensity(in PointLight light, in rt_hit hit, in int highlight_exp) {
     float k = phong_spec_coeff(light, hit);
     return ipow(k, highlight_exp);
 }
 
+//Performs Blinn-Phong lighting on the given rt_hit
 void phong_light(in PointLight light, inout rt_hit hit, in color3 diffuse, in color3 specular, in int highlight_exp) {
     //IaCa + CL( IdCd + IsCs )
     
@@ -343,31 +298,6 @@ void phong_light(in PointLight light, inout rt_hit hit, in color3 diffuse, in co
 
 // END PHONG MODEL
 
-// BEGIN MULTIPLE LIGHTS
-
-struct Multilight {
-    vec4 ambient;
-    PointLight[MAX_LIGHTS] lights;
-    int light_count; //Should never exceed MAX_LIGHTS
-};
-
-void phong_multilight(in Multilight this, inout rt_hit hit, in vec3 diffuse, in vec3 specular, in int highlight_exp) {
-    vec3 color_out = this.ambient.rgb * this.ambient.a;
-    
-    for(int i = 0; i < this.light_count; ++i) {
-        PointLight light = this.lights[i];
-        
-        //Phong light boilerplate
-    	vec3 IdCd = lambert_diffuse_intensity(light, hit)*diffuse;
-        float Is = phong_spec_intensity(light, hit, highlight_exp); vec3 Cs = specular;
-        color_out += clamp01(light.color.rgb*( IdCd + Is*Cs ));
-    }
-    
-    hit.color.rgb = color_out;
-}
-
-// END MULITPLE LIGHTS
-
 // END LIGHTS
 
 // BEGIN RAYTRACEABLE OBJECTS
@@ -377,13 +307,16 @@ sVector normal(in sViewport this) {
 }
 
 color4 color(in sViewport this, in sRay ray, in PointLight light) {
+    //Create virtual hit object
     rt_hit hit;
     hit.pos = asPoint(sBasis(this.viewportPoint.xy, -1));
     hit.nrm = normal(this);
     
+    //Colors for lighting
     color3 specular = color3(1, 1, 1);
     color3 diffuse = color3(0.8, 0.8, 0.8);
     
+    //Apply Blinn-Phong lighting
     phong_light(light, hit, diffuse, specular, 64);
     
     return hit.color;
@@ -398,8 +331,10 @@ color4 color(in sViewport this, in sRay ray, in PointLight light) {
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray, in sViewport mouseVp, in sRay mouseRay)
 {
+    //Make a light at the mouse position
     PointLight light = mk_PointLight(sPoint(ray_at(mouseRay, 2.).xy, 1, 1), LIGHT_COLOR, LIGHT_INTENSITY);
     
+    //Render the viewport quad
     return color(vp, ray, light);
 }
 
