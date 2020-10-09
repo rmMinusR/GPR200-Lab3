@@ -224,31 +224,6 @@ void initRayOrtho(out sRay ray,
 
 // BEGIN RENDERING FUNCTIONS
 
-// getRes: returns a 2D vector with the channel's resolution
-//    i: number of the channel
-sDCoord getRes(in int i)
-{
-    return iChannelResolution[i].xy;
-}
-
-// getRatio: returns a float with the ratio of the
-// channel's resolution to the viewport's resolution
-//    res: resolution of the channel
-//    vp:  viewport info structure
-sScalar getRatio(in sDCoord res, in sViewport vp)
-{
-    return res.y * vp.resolutionInv.y;
-}
-
-// calcCoord: calculates the coordinates to display a 2D image
-//    px:    current pixel coordinate
-//    res:   coordinate system of 2D image's resolution
-//    ratio: ratio of image resolution to screen resolution
-sCoord calcCoord(in sCoord px, in sDCoord res, in sScalar ratio)
-{
-    return (px / res) * ratio;
-}
-
 // wave: distorts a 2D image with a wave effect
 //    originLoc: 2D coordinate to be distorted
 void wave(inout sCoord originLoc)
@@ -261,21 +236,12 @@ void wave(inout sCoord originLoc)
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray)
 {
-    sCoord px = vp.pixelCoord; // gets the current pixel's coordinates
-    sDCoord res = getRes(0); // gets the texture's resolution
-    sScalar ratio = getRatio(res, vp); // gets the ratio of the two resolutions
-    int distort = 0; // 0 for still image, anything else to distort
-    
-    if (distort == 0) // checks if want to distort image
-    {
-    	return texture(iChannel0, calcCoord(px, res, ratio)); // returns the texture as a still image
-    }
-    else
-    {
-    	sCoord uv = vp.pixelCoord / iResolution.xy; // converts the coordinate to a uv
-    	wave(uv); // distorts the coordinate
-    	return texture(iChannel0, uv); // returns the texture as a distorted image
-    }
+    #if 1
+    	return texture(iChannel0, vp.uv); // returns the texture as a still image
+    #else
+    	wave(vp.uv); // distorts the coordinate
+   		return texture(iChannel0, vp.uv); // returns the texture as a distorted image
+    #endif
 }
 
 // END RENDERING FUNCTIONS

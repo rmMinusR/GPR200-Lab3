@@ -222,43 +222,13 @@ void initRayOrtho(out sRay ray,
 
 // BEGIN RENDERING FUNCTIONS
 
-// getRes: returns a 2D vector with the channel's resolution
-//    i: number of the channel
-sDCoord getRes(in int i)
-{
-    return iChannelResolution[i].xy;
-}
-
-// getRatio: returns a float with the ratio of the
-// channel's resolution to the viewport's resolution
-//    res: resolution of the channel
-//    vp:  viewport info structure
-sScalar getRatio(in sDCoord res, in sViewport vp)
-{
-    return res.y * vp.resolutionInv.y;
-}
-
-// calcCoord: calculates the coordinates to display a 2D image
-//    px:    current pixel coordinate
-//    res:   coordinate system of 2D image's resolution
-//    ratio: ratio of image resolution to screen resolution
-sCoord calcCoord(in sCoord px, in sDCoord res, in sScalar ratio)
-{
-    return (px / res) * ratio;
-}
-
 // calcColor: calculate the color of current pixel
 //	  vp:  input viewport info
 //	  ray: input ray info
 color4 calcColor(in sViewport vp, in sRay ray)
 {
-    sCoord px = vp.pixelCoord; // gets the current pixel's coordinates
-    sDCoord res0 = getRes(0); // gets iChannel0's resolution
-    sDCoord res1 = getRes(1); // gets iChannel1's resolution
-    sScalar ratio0 = getRatio(res0, vp); // gets the ratio of iChannel0 and screen resolutions
-    sScalar ratio1 = getRatio(res1, vp); // gets the ratio of iChannel1 and screen resolutions
-    color4 chan0 = texture(iChannel0, calcCoord(px, res0, ratio0)); // stores the texture as a vec4 for mixing
-    color4 chan1 = texture(iChannel1, calcCoord(px, res1, ratio1)); // stores the texture as a vec4 for mixing
+    color4 chan0 = texture(iChannel0, vp.uv); // stores the texture as a vec4 for mixing
+    color4 chan1 = texture(iChannel1, vp.uv); // stores the texture as a vec4 for mixing
     return mix(chan0, chan1, (sin(iTime * 1.5) + 1.0) / 2.0); // crossfades the two textures based on the time
 }
 
