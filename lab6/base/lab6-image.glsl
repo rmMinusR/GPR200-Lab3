@@ -1,8 +1,12 @@
-// GLSL STARTER CODE BY DANIEL S. BUCKSTEIN
-//  -> IMAGE TAB (final)
+/*
+
+Code by Sean Sawyers-Abbott and Robert Christensen
+Based on starter code by Daniel S. Buckstein
+
+*/
 
 // https://github.com/CesiumGS/cesium/blob/master/Source/Shaders/Builtin/Functions/luminance.glsl
-// this function was modified from the link above
+// This function was taken from the link above. WE DO NOT CLAIM CREDIT
 float luminance(vec3 rgb)
 {
     const vec3 W = vec3(0.2125, 0.7154, 0.0721);

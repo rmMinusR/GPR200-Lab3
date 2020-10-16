@@ -1,5 +1,7 @@
 /*
 
+Code by Robert Christensen
+
 Accumulation Buffer (iChannel0 should be self)
 Tracks mouse position, mouse delta, resolution
 Uses mouse delta to create a view angle (clips if the mouse jumps -- delta is too extreme)

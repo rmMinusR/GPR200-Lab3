@@ -1,5 +1,8 @@
 /*
 
+Code by Robert Christensen
+Based on starter code by Daniel S. Buckstein
+
 Modified Buffer A
 Uses Accumulation Buffer instead of raw mouse position. This
 lets us get "pan"-like mouse usage instead of the view resetting.

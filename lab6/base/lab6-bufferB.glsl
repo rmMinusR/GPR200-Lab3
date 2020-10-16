@@ -1,3 +1,9 @@
+/*
+
+Code by Sean Sawyers-Abbott and Robert Christensen
+
+*/
+
 // mainImage: process the current pixel (exactly one call per pixel)
 //    fragColor: output final color for current pixel
 //    fragCoord: input location of current pixel in image (in pixels)

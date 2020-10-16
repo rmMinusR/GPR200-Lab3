@@ -1,5 +1,9 @@
-// GLSL STARTER CODE BY DANIEL S. BUCKSTEIN
-//  -> BUFFER A TAB (scene)
+/*
+
+Code by Robert Christensen
+Based on starter code by Daniel S. Buckstein
+
+*/
 
 //------------------------------------------------------------
 // RENDERING FUNCTIONS

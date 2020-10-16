@@ -1,3 +1,9 @@
+/*
+
+Code by Sean Sawyers-Abbott and Robert Christensen
+
+*/
+
 // blurs the image vertically
 vec4 blurY(in vec2 fragCoord)
 {

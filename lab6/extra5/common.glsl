@@ -1,3 +1,10 @@
+/*
+
+Code by Sean Sawyers-Abbott and Robert Christensen
+Based on starter code by Daniel S. Buckstein
+
+*/
+
 #define PI 3.1415926535
 #define DEG2RAD (PI/360.)
 #define RAD2DEG (360./PI)

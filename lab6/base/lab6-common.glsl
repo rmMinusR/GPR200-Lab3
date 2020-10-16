@@ -1,3 +1,10 @@
+/*
+
+Code by Sean Sawyers-Abbott and Robert Christensen
+Based on starter code by Daniel S. Buckstein
+
+*/
+
 #define PI 3.1415926535
 #define DEG2RAD (PI/360.)
 // 1 for size 3 kernel, 0 for size 15 kernel
