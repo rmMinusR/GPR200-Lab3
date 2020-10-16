@@ -1,5 +1,6 @@
 #define PI 3.1415926535
 #define DEG2RAD (PI/360.)
+// 1 for size 3 kernel, 0 for size 15 kernel
 #if 1
 const int kernSize = 3;
 const float kernel[kernSize] = float[kernSize]
