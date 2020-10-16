@@ -31,6 +31,7 @@ vec4 doScreen(in vec4 x, in vec4 y)
 vec4 doOverlay(in vec4 x, in vec4 y)
 {
     float lum = luminance(x.rgb);
+    
     if (lum < 0.5)
     {
         return 2. * x * y;
@@ -39,6 +40,45 @@ vec4 doOverlay(in vec4 x, in vec4 y)
     {
         return 1. - 2. * (1. - x) * (1. - y);
     }
+}
+
+// sharpens the image
+vec4 sharpen(in vec2 fragCoord, sampler2D newSample)
+{
+    float newKern[9] = float[9](-0.5, -0.5, -0.5,
+                                -0.5, 5.0, -0.5,
+                                -0.5, -0.5, -0.5);
+    float k;
+    vec2 newCoord;
+    vec4 sum;
+    k = newKern[0];
+    // finds each necessary pixel then weights them to sharpen the image
+    newCoord = vec2(fragCoord.x - 1., fragCoord.y + 1.) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[1];
+    newCoord = vec2(fragCoord.x, fragCoord.y + 1.) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[2];
+    newCoord = vec2(fragCoord.x + 1., fragCoord.y + 1.) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[3];
+    newCoord = vec2(fragCoord.x - 1., fragCoord.y) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[4];
+    newCoord = vec2(fragCoord.x, fragCoord.y) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[5];
+    newCoord = vec2(fragCoord.x + 1., fragCoord.y) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[6];
+    newCoord = vec2(fragCoord.x - 1., fragCoord.y - 1.) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[7];
+    newCoord = vec2(fragCoord.x, fragCoord.y - 1.) / iResolution.xy;
+    sum += k * texture(newSample, newCoord);
+    k = newKern[8];
+    newCoord = vec2(fragCoord.x + 1., fragCoord.y - 1.) / iResolution.xy;
+    return sum + k * texture(newSample, newCoord);
 }
 
 //------------------------------------------------------------
@@ -50,7 +90,12 @@ vec4 doOverlay(in vec4 x, in vec4 y)
 void mainImage(out color4 fragColor, in sCoord fragCoord)
 {
     sCoord uv = fragCoord / iChannelResolution[0].xy;
+    
+    // samples the textures from each of the channels
     vec4 chan0 = texture(iChannel0, uv);
     vec4 chan1 = texture(iChannel1, uv);
+    
     fragColor = doMix(chan0, chan1);
+    
+    //fragColor = sharpen(fragCoord, iChannel1);
 }

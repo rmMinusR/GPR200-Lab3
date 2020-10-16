@@ -1,6 +1,17 @@
 #define PI 3.1415926535
 #define DEG2RAD (PI/360.)
-#define RAD2DEG (360./PI)
+// 1 for size 3 kernel, 0 for size 15 kernel
+#if 1
+const int kernSize = 3;
+const float kernel[kernSize] = float[kernSize]
+    (1., 2., 1.);
+#else
+const int kernSize = 15;
+const float kernel[kernSize] = float[kernSize]
+    (1., 14., 91., 364., 1001., 2002., 3003., 3432.,
+     3003., 2002., 1001., 364., 91., 14., 1.)
+#endif
+const int size = (kernSize - 1) / 2;
 
 vec4 rotateY(in vec4 v, in float ang) {
     return vec4(
