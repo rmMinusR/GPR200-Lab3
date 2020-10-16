@@ -1,5 +1,5 @@
-// blurs the image horizontally
-vec4 blurX(in vec2 fragCoord)
+// blurs the image vertically
+vec4 blurY(in vec2 fragCoord)
 {
     float div;
     vec2 newCoord;
@@ -7,7 +7,7 @@ vec4 blurX(in vec2 fragCoord)
     for (int i = -size; i < size; ++i)
     {
          float k = kernel[i + size]; // finds the weight for each pixel
-         newCoord = vec2(fragCoord.x + float(i), fragCoord.y)
+         newCoord = vec2(fragCoord.x, fragCoord.y + float(-i))
              / iChannelResolution[0].xy; // finds the needed pixel
          sum += k * texture(iChannel0, newCoord); // weights the pixel
          div += k; // increments count for finding average
@@ -20,5 +20,5 @@ vec4 blurX(in vec2 fragCoord)
 //    fragCoord: input location of current pixel in image (in pixels)
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-    fragColor = blurX(fragCoord);
+    fragColor = blurY(fragCoord);
 }
