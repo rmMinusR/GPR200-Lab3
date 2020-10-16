@@ -6,7 +6,7 @@ lets us get "pan"-like mouse usage instead of the view resetting.
 
 SETUP:
  - iChannel0: Cubemap to view
- - iChannel1: Accumulation Buffer
+ - iChannel1: Accumulation Buffer - MUST be nearest
 
 */
 
