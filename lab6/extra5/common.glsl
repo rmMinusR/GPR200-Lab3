@@ -1,17 +1,25 @@
 #define PI 3.1415926535
 #define DEG2RAD (PI/360.)
-// 1 for size 3 kernel, 0 for size 15 kernel
-#if 1
-const int kernSize = 3;
-const float kernel[kernSize] = float[kernSize]
-    (1., 2., 1.);
-#else
-const int kernSize = 15;
-const float kernel[kernSize] = float[kernSize]
-    (1., 14., 91., 364., 1001., 2002., 3003., 3432.,
-     3003., 2002., 1001., 364., 91., 14., 1.)
-#endif
-const int size = (kernSize - 1) / 2;
+#define RAD2DEG (360./PI)
+
+const vec2 MOUSE_SENSITIVITY = vec2(1, -1);
+
+float lenSq(in vec2 v) {
+    return dot(v, v);
+}
+
+float sq(in float v) {
+    return v*v;
+}
+
+vec4 rotateX(in vec4 v, in float ang) {
+    return vec4(
+    	v.x,
+        v.y*cos(ang)-v.z*sin(ang),
+        v.y*sin(ang)+v.z*cos(ang),
+        v.w
+    );
+}
 
 vec4 rotateY(in vec4 v, in float ang) {
     return vec4(
