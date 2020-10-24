@@ -1,9 +1,9 @@
 const int INT_MAX = 0xFFFFFFFF;
 const float FLOAT_MAX = float(INT_MAX); // FIXME
 
-const int MARCH_MAX_STEPS = 16;
+const int MARCH_MAX_STEPS = 32;
 const float MARCH_MAX_DIST = 128.;
-const float MARCH_HIT_THRESHOLD = 0.05;
+const float MARCH_HIT_THRESHOLD = 0.0001;
 
 #define this _this
 
@@ -193,7 +193,7 @@ vec4 color(in Sphere this, in March march) {
 
 // BEGIN RAYMARCHER
 
-March mk_March(in Ray ray) { March val; val.position = ray; val.closestApproach = FLOAT_MAX; return val; }
+March mk_March(in Ray ray) { March val; val.position = ray; val.closestApproach = MARCH_MAX_DIST; return val; }
 
 float march_step(inout March march, in Sphere sphere) {
     float d = signedDistance(sphere, march.position.origin);
@@ -207,34 +207,37 @@ March cam_march(in Ray ray) {
     March march = mk_March(ray);
     //MARCH CURRENT VALUES: position
     
-    Sphere s = mk_Sphere(vec4(0,0,-2,1),1.);
-    PointLight l = mk_PointLight(vec4(0,0,0,1), vec3(1), 1.);
+    Sphere s = mk_Sphere(vec4(0,0,-1.5,1),1.);
+    PointLight l = mk_PointLight(vec4(0.5,0.5,0,1), vec3(1), 16.);
     
     float d = FLOAT_MAX; // temp var
+    bool hit, nohit;
     do {
         d = march_step(march, s);
         
-        if(march.distanceMarched > MARCH_MAX_DIST || march.iterations > MARCH_MAX_STEPS) return march; //Didn't hit anything.
-        
         ++march.iterations;
-    } while(d > MARCH_HIT_THRESHOLD);
+        
+        nohit = march.distanceMarched > MARCH_MAX_DIST || march.iterations > MARCH_MAX_STEPS;
+        hit = d < MARCH_HIT_THRESHOLD;
+    } while(!hit && !nohit);
     
-    //MARCH CURRENT VALUES: position, distanceMarched, iterations, closestApproach
-    
-    march.normal = normal(s, march.position.origin);
-    march.color = color(s, march);
-    
-    //MARCH FULLY POPULATED
-    
-    //Do lighting
-    march.color = lambert_light(l, march.color, march.position.origin, march.normal);
-    
+    if(hit) {
+        //MARCH CURRENT VALUES: position, distanceMarched, iterations, closestApproach
+
+        march.normal = normal(s, march.position.origin);
+        march.color = color(s, march);
+
+        //MARCH FULLY POPULATED
+
+        //Do lighting
+        march.color = mix(march.color, lambert_light(l, march.color, march.position.origin, march.normal), 0.8);
+    } else {
+        march.normal = -march.position.direction;
+        march.color = vec4(0,0,0,1);
+    }
+
     return march;
 }
 
 // END RAYMARCHER
-
-
-
-
 
