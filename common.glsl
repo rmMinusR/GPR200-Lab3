@@ -5,6 +5,13 @@ const int MARCH_MAX_STEPS = 32;
 const float MARCH_MAX_DIST = 128.;
 const float MARCH_HIT_THRESHOLD = 0.0001;
 
+const int LEFT = 65;
+const int UP = 87;
+const int RIGHT = 68;
+const int DOWN = 83;
+
+const vec2 sens = vec2(100.);
+
 #define this _this
 
 struct Ray {
@@ -240,4 +247,3 @@ March cam_march(in Ray ray) {
 }
 
 // END RAYMARCHER
-
