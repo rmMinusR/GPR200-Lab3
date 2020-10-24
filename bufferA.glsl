@@ -15,7 +15,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     
     // make ray for fragment
     Ray ray;
-    calcRay(ray, viewport, focalLength);
+    calcRay(ray, viewport, focalLength,
+            texelFetch(iChannel0, camRotPos, 0).xy, texelFetch(iChannel0, camPos, 0).xyz);
     
     March march = cam_march(ray);
     //fragColor.r = march.distanceMarched / 4.;
