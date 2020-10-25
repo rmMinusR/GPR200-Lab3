@@ -10,12 +10,15 @@ const int UP = 87;
 const int RIGHT = 68;
 const int DOWN = 83;
 
-const vec2 mouseSens = vec2(0.1);
+const vec2 mouseSens = vec2(-0.004, 0.004);
 const vec2 moveSens = vec2(0.1);
 
 const ivec2 camPos = ivec2(0,0);
 const ivec2 mousePos = ivec2(1,0);
 const ivec2 camRotPos = ivec2(2,0);
+
+const float PI = 3.1415926535;
+const float DEG2RAD = PI/180.;
 
 #define this _this
 
@@ -116,7 +119,7 @@ void calcRay(out Ray ray, in vec2 viewport, in float focalLength,
                      vec3(0, 1, 0),
                      vec3(-sin(camRot.y), 0, cos(camRot.y)));
     
-    //ray.direction.xyz = yRot * xRot * ray.direction.xyz;
+    ray.direction.xyz = yRot * xRot * ray.direction.xyz;
 }
 
 // END LAB 3 BOILERPLATE
