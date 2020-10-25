@@ -1,10 +1,3 @@
-const int LEFT  = 37;
-const int UP    = 38;
-const int RIGHT = 39;
-const int DOWN  = 40;
-
-const vec2 sens = vec2(1,1);
-
 vec3 calcMovement()
 {
     vec2 camRot = texelFetch(iChannel0, camRotPos, 0).xy;
@@ -27,6 +20,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     
     if (posCoord == camPos)
     {
+        fragColor = texelFetch(iChannel0, camPos, 0);
         fragColor += vec4(calcMovement(), 0.0);
     }
     
@@ -43,6 +37,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         if (length(deltaMouse) < 25.)
         {
             camRot += deltaMouse.yx * mouseSens;
+            fragColor.x = clamp(camRot.x, -90., 90.);
+            fragColor.y = camRot.y;
         }
     }
 }
