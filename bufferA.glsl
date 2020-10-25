@@ -19,7 +19,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     
     March march = cam_march(ray);
     //fragColor.r = march.distanceMarched / 4.;
-    //fragColor.g = float(march.iterations) / 4.;
+    //fragColor.g = float(march.iterations) / float(MARCH_MAX_STEPS);
     //fragColor.b = float(march.closestApproach)*5.;
     fragColor = march.color;
 }

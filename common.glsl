@@ -1,16 +1,9 @@
 const int INT_MAX = 0xFFFFFFFF;
 const float FLOAT_MAX = float(INT_MAX); // FIXME
 
-const int MARCH_MAX_STEPS = 32;
+const int MARCH_MAX_STEPS = 64;
 const float MARCH_MAX_DIST = 128.;
-const float MARCH_HIT_THRESHOLD = 0.0001;
-
-const int LEFT = 65;
-const int UP = 87;
-const int RIGHT = 68;
-const int DOWN = 83;
-
-const vec2 sens = vec2(100.);
+const float MARCH_HIT_THRESHOLD = 0.00001;
 
 #define this _this
 
@@ -19,7 +12,8 @@ struct Ray {
 };
 
 struct March {
-    //We need approach direction as well, because camera will be moving
+    //We need approach direction as well for light view_v -> halfway
+    //(BP only) because camera will be moving
     Ray position;
     
     //Saves a normalize() call
@@ -34,6 +28,14 @@ struct March {
     //Ideally would be a double
     float closestApproach;
 };
+
+//Float range remap. Now no longer an eeevil macro thanks to preprocessor!	
+#define GEN_DECLARE(genType) genType fmap(in genType v, in genType lo1, in genType hi1, in genType lo2, in genType hi2) { return (v-lo1)/(hi1-lo1)*(hi2-lo2)+lo2; }	
+GEN_DECLARE(float)	
+GEN_DECLARE(vec2)	
+GEN_DECLARE(vec3)	
+GEN_DECLARE(vec4)	
+#undef GEN_DECLARE
 
 //Square
 #define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
@@ -92,6 +94,8 @@ void calcRay(out Ray ray, in vec2 viewport, in float focalLength)
     // ray direction relative to origin is based on viewing plane coordinate
     // w = 0 because it represents a direction; can ignore when using
     ray.direction = vec4(viewport.x, viewport.y, -focalLength, 0.0);
+    
+    
 }
 
 // END LAB 3 BOILERPLATE
@@ -236,14 +240,21 @@ March cam_march(in Ray ray) {
 
         //MARCH FULLY POPULATED
 
-        //Do lighting
+        //Do lighting (mixed so it isn't entirely black in shadow)
         march.color = mix(march.color, lambert_light(l, march.color, march.position.origin, march.normal), 0.8);
     } else {
         march.normal = -march.position.direction;
         march.color = vec4(0,0,0,1);
     }
-
+    
+    //Haloing
+    float halo = float(march.iterations)/float(MARCH_MAX_STEPS) - 0.1/max(march.closestApproach,1.);
+    //halo *= halo;
+    //halo = pow(halo, 1.5);
+    march.color += vec4(1) * halo;
+    
     return march;
 }
 
 // END RAYMARCHER
+
