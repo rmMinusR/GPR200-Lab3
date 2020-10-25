@@ -5,6 +5,18 @@ const int MARCH_MAX_STEPS = 64;
 const float MARCH_MAX_DIST = 128.;
 const float MARCH_HIT_THRESHOLD = 0.00001;
 
+const int LEFT = 65;
+const int UP = 87;
+const int RIGHT = 68;
+const int DOWN = 83;
+
+const vec2 mouseSens = vec2(0.1);
+const vec2 moveSens = vec2(0.1);
+
+const ivec2 camPos = ivec2(0,0);
+const ivec2 mousePos = ivec2(1,0);
+const ivec2 camRotPos = ivec2(2,0);
+
 #define this _this
 
 struct Ray {
@@ -85,17 +97,26 @@ void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv
 //    ray:          output ray, origin-relative
 //    viewport:     input viewing plane coordinate (use above function to calculate)
 //    focalLength:  input distance to viewing plane
-void calcRay(out Ray ray, in vec2 viewport, in float focalLength)
+void calcRay(out Ray ray, in vec2 viewport, in float focalLength,
+             in vec2 camRot, in vec3 camPos)
 {
     // ray origin relative to viewer is the origin
     // w = 1 because it represents a point; can ignore when using
-    ray.origin = vec4(0.0, 0.0, 0.0, 1.0);
+    ray.origin = vec4(camPos, 1.0);
 
     // ray direction relative to origin is based on viewing plane coordinate
     // w = 0 because it represents a direction; can ignore when using
     ray.direction = vec4(viewport.x, viewport.y, -focalLength, 0.0);
     
+    mat3 xRot = mat3(vec3(1, 0, 0),
+                     vec3(0, cos(camRot.x), -sin(camRot.x)),
+                     vec3(0, sin(camRot.x),  cos(camRot.x)));
     
+    mat3 yRot = mat3(vec3(cos(camRot.y), 0, sin(camRot.y)),
+                     vec3(0, 1, 0),
+                     vec3(-sin(camRot.y), 0, cos(camRot.y)));
+    
+    //ray.direction.xyz = yRot * xRot * ray.direction.xyz;
 }
 
 // END LAB 3 BOILERPLATE
@@ -255,6 +276,5 @@ March cam_march(in Ray ray) {
     
     return march;
 }
-
 // END RAYMARCHER
 
