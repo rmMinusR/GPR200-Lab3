@@ -10,6 +10,7 @@ const int LEFT = 65;
 const int UP = 87;
 const int RIGHT = 68;
 const int DOWN = 83;
+const int SHIFT = 0x10;
 
 const vec2 mouseSens = vec2(-0.01, 0.01);
 const vec2 moveSens = vec2(0.01);
@@ -312,14 +313,14 @@ March cam_march(in Ray ray) {
         march.color = mix(march.color, lambert_light(l, march.color, march.position.origin, march.normal), 0.8);
     } else {
         march.normal = -march.position.direction;
-        march.color = vec4(0,0,0,1);
+        march.color = vec4(0,0,0,0);
     }
     
     //Haloing
     float halo = float(march.iterations)/float(MARCH_MAX_STEPS) - 0.1/max(march.closestApproach,1.);
     //halo *= halo;
     //halo = pow(halo, 1.5);
-    //march.color += vec4(1) * halo;
+    march.color += vec4(1) * halo;
     
     return march;
 }

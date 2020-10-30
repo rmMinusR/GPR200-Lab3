@@ -12,6 +12,7 @@ vec3 calcMovement()
                          -texelFetch(iChannel1, ivec2(LEFT , 0), 0).r,
                           texelFetch(iChannel1, ivec2(UP   , 0), 0).r
                          -texelFetch(iChannel1, ivec2(DOWN , 0), 0).r);
+    keyInput *= texelFetch(iChannel1, ivec2(SHIFT, 0), 0).r + 1.;
     forward *= keyInput.y * moveSens.y;
     right *= keyInput.x * moveSens.x;
     return right + forward;
@@ -24,8 +25,16 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     
     if (posCoord == camPos)
     {
-        fragColor = texelFetch(iChannel0, camPos, 0);
-        fragColor += vec4(calcMovement(), 0.0);
+        if (iFrame == 0)
+        {
+            fragColor = vec4(0., 0., 1.5, 0.);
+        }
+        else
+        {
+            vec4 camera = texelFetch(iChannel0, camPos, 0);
+            float dist = signedDistance(camera);
+            fragColor = camera + vec4(calcMovement() * dist, 0.0);
+        }
     }
     
     if (posCoord == mousePos)
