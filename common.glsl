@@ -1,8 +1,4 @@
-
-const int INT_MAX = 0xFFFFFFFF;
-const float FLOAT_MAX = float(INT_MAX); // FIXME
-
-const int MARCH_MAX_STEPS = 64;
+const int MARCH_MAX_STEPS = 256;
 const float MARCH_MAX_DIST = 128.;
 const float MARCH_HIT_THRESHOLD = 0.00001;
 
@@ -269,14 +265,14 @@ March cam_march(in Ray ray) {
     
     PointLight l = mk_PointLight(vec4(0.5,0.5,0,1), vec3(1), 16.);
     
-    float d = FLOAT_MAX; // temp var
+    float d = MARCH_MAX_DIST; // temp var
     bool hit, nohit;
     do {
         d = march_step(march);
         
         ++march.iterations;
         
-        nohit = march.distanceMarched > MARCH_MAX_DIST;// || march.iterations > MARCH_MAX_STEPS;
+        nohit = march.distanceMarched > MARCH_MAX_DIST || march.iterations > MARCH_MAX_STEPS;
         hit = d < MARCH_HIT_THRESHOLD;
     } while(!hit && !nohit);
     
@@ -295,7 +291,8 @@ March cam_march(in Ray ray) {
     }
     
     //Haloing
-    float halo = float(march.iterations)/float(MARCH_MAX_STEPS) - 0.1/max(march.closestApproach,1.);
+    float halo = float(march.iterations)/96. - 0.1/max(march.closestApproach,1.);
+    halo = clamp(halo, 0., 1.);
     march.color.rgb += vec3(1) * halo;
     march.color.a = 1.-( (1.-march.color.a) * (1.-halo) );
     
