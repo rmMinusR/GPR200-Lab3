@@ -6,14 +6,16 @@ const float MARCH_MAX_DIST = 128.;
 const float MARCH_HIT_THRESHOLD = 0.00001;
 
 // codes for A, W, D, and S keys respectively
-const int LEFT = 65;
-const int UP = 87;
-const int RIGHT = 68;
-const int DOWN = 83;
 const int SHIFT = 0x10;
+const int LCTRL = 0x11;
+const int SPACE = 0x20;
+const int KEY_A = 0x41;
+const int KEY_D = 0x44;
+const int KEY_S = 0x53;
+const int KEY_W = 0x57;
 
 const vec2 mouseSens = vec2(-0.01, 0.01);
-const vec2 moveSens = vec2(0.01);
+const float moveSens = 0.01;
 
 // coordinates to store each piece of data
 const ivec2 camPos = ivec2(0,0);
