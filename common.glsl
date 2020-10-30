@@ -5,14 +5,16 @@ const int MARCH_MAX_STEPS = 64;
 const float MARCH_MAX_DIST = 128.;
 const float MARCH_HIT_THRESHOLD = 0.00001;
 
+// codes for A, W, D, and S keys respectively
 const int LEFT = 65;
 const int UP = 87;
 const int RIGHT = 68;
 const int DOWN = 83;
 
-const vec2 mouseSens = vec2(-0.004, 0.004);
+const vec2 mouseSens = vec2(0.004, -0.004);
 const vec2 moveSens = vec2(0.1);
 
+// coordinates to store each piece of data
 const ivec2 camPos = ivec2(0,0);
 const ivec2 mousePos = ivec2(1,0);
 const ivec2 camRotPos = ivec2(2,0);
@@ -212,9 +214,16 @@ float signedDistance(in Sphere this, vec4 position) {
 
 //Get the *outer* normal of the given sphere.
 //Inner normal isn't necessary because inner faces are culled.
-vec4 normal(in Sphere this, in vec4 global_pos) {
+vec4 normal(in Sphere this, in vec4 glob_pos) {
     //return normalize(global_pos-this.center);
-    return (global_pos-this.center)/this.radius;
+    //return (global_pos-this.center)/this.radius;
+    float offset = 0.01;
+    vec4 xDir = vec4(offset, 0., 0., 0.);
+    vec4 yDir = vec4(0., offset, 0., 0.);
+    vec4 zDir = vec4(0., 0., offset, 0.);
+    return vec4(normalize(vec3(signedDistance(this, glob_pos+xDir)-signedDistance(this, glob_pos-xDir),
+		                       signedDistance(this, glob_pos+yDir)-signedDistance(this, glob_pos-yDir),
+		                       signedDistance(this, glob_pos+zDir)-signedDistance(this, glob_pos-zDir))), 0.);
 }
 
 vec4 color(in Sphere this, in March march) {
@@ -280,4 +289,3 @@ March cam_march(in Ray ray) {
     return march;
 }
 // END RAYMARCHER
-
