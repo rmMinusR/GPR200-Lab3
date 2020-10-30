@@ -3,6 +3,7 @@ const float MARCH_MAX_DIST = 128.;
 const float MARCH_HIT_THRESHOLD = 0.00001;
 
 // codes for A, W, D, and S keys respectively
+const int ESC = 0x1b;
 const int SHIFT = 0x10;
 const int LCTRL = 0x11;
 const int SPACE = 0x20;
