@@ -1,8 +1,52 @@
-const int MARCH_MAX_STEPS = 256;
-const float MARCH_MAX_DIST = 128.;
-const float MARCH_HIT_THRESHOLD = 0.00001;
+/*
 
-// codes for A, W, D, and S keys respectively
+Midterm: Fractal raymarcher
+'Common' tab by Robert Christensen and Sean Sawyers-Abbott
+
+Contents:
+ - Parameters
+ - Constants
+ - Utils
+ - Data structures
+ - Lab 3 boilerplate
+ - Lights
+    - Lambertian model
+ - Mandelbulb
+
+*/
+
+// BEGIN PARAMETERS
+
+// Parameters for raymarching
+const int MARCH_MAX_STEPS = 256;   // Maximum iteration cap. Must be something reasonable or WebGL will crash.
+const float MARCH_MAX_DIST = 128.; // Distance for us to safely assume we haven't hit anything.
+const float MARCH_HIT_THRESHOLD = 0.00001; // How close must we be to be considered a "hit"?
+
+// Mouse and keyboard sensitivity for controlling the camera
+const vec2 mouseSens = vec2(-0.01, 0.01);
+const float moveSens = 0.05;
+
+// Mandelbulb parameters
+
+//#define power (1.+mod(iTime/8., 1.)*8.)
+const float power = 10.;
+const float normal_detail = 0.004;
+
+// END PARAMETERS
+
+
+// BEGIN CONSTANTS
+
+// Coordinates where each piece of data is stored in accumulation buffer
+const ivec2 camPosInd = ivec2(0,0);
+const ivec2  mouseInd = ivec2(1,0);
+const ivec2 camRotInd = ivec2(2,0);
+
+// Math constants
+const float PI = 3.1415926535;
+const float DEG2RAD = PI/180.;
+
+// Keycode constants for A, W, D, and S keys respectively
 const int ESC = 0x1b;
 const int SHIFT = 0x10;
 const int LCTRL = 0x11;
@@ -12,21 +56,34 @@ const int KEY_D = 0x44;
 const int KEY_S = 0x53;
 const int KEY_W = 0x57;
 
-const vec2 mouseSens = vec2(-0.01, 0.01);
-const float moveSens = 0.01;
+// END CONSTANTS
 
-// coordinates to store each piece of data
-const ivec2 camPos = ivec2(0,0);
-const ivec2 mousePos = ivec2(1,0);
-const ivec2 camRotPos = ivec2(2,0);
 
-const float PI = 3.1415926535;
-const float DEG2RAD = PI/180.;
+// BEGIN UTILS
 
-//#define power (1.+\mod(iTime/8., 1.)*8.)
-const float power = 10.;
+// Square
+#define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
+GEN_DECLARE(int  ) GEN_DECLARE(ivec2) GEN_DECLARE(ivec3) GEN_DECLARE(ivec4)
+GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
+#undef GEN_DECLARE
 
+// "Un-reserve" the this keyword
 #define this _this
+
+// Blend layers based on transparency
+void alpha_blend(vec4 back, vec4 front, out vec4 result) {
+    //Make params bounded (inefficient but necessary here)
+    //This conditional isn't very bad because worst-case isn't expensive
+    back  = clamp(back,  0., 1.);
+    front = clamp(front, 0., 1.);
+    
+    result = vec4( mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
+}
+
+// END UTILS
+
+
+// BEGIN DATA STRUCTURES
 
 struct Ray {
     vec4 origin, direction;
@@ -50,35 +107,14 @@ struct March {
     float closestApproach;
 };
 
-//Float range remap. Now no longer an eeevil macro thanks to preprocessor!	
-#define GEN_DECLARE(genType) genType fmap(in genType v, in genType lo1, in genType hi1, in genType lo2, in genType hi2) { return (v-lo1)/(hi1-lo1)*(hi2-lo2)+lo2; }	
-GEN_DECLARE(float)	
-GEN_DECLARE(vec2)	
-GEN_DECLARE(vec3)	
-GEN_DECLARE(vec4)	
-#undef GEN_DECLARE
+// END DATA STRUCTURES
 
-//Square
-#define GEN_DECLARE(genType) genType sq(in genType v) { return v*v; }
-GEN_DECLARE(int  ) GEN_DECLARE(ivec2) GEN_DECLARE(ivec3) GEN_DECLARE(ivec4)
-GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
-#undef GEN_DECLARE
-    
+
 // BEGIN LAB 3 BOILERPLATE
 // These snippets were copy-pasted from the assignment main page
 // calcViewport() modified by RC for use in SSAA
-// calcBGColor() modified by RC for data-structure syntax
 
-// calcViewport: calculate the viewing plane (viewport) coordinate
-//    viewport:       output viewing plane coordinate
-//RC: px_size:        output size of each pixel, for SSAA calculations, in viewport coordinates
-//    ndc:            output normalized device coordinate
-//    uv:             output screen-space coordinate
-//    aspect:         output aspect ratio of screen
-//    resolutionInv:  output reciprocal of resolution
-//    viewportHeight: input height of viewing plane
-//    fragCoord:      input coordinate of current fragment (in pixels)
-//    resolution:     input resolution of screen (in pixels)
+// Calculate the coordinate on the viewing plane
 void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv,
                   out float aspect, out vec2 resolutionInv,
                   in float viewportHeight, in vec2 fragCoord, in vec2 resolution)
@@ -102,21 +138,17 @@ void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv
     
 }
 
-// calcRay: calculate the ray direction and origin for the current pixel
-//    ray:          output ray, origin-relative
-//    viewport:     input viewing plane coordinate (use above function to calculate)
-//    focalLength:  input distance to viewing plane
+// Build a ray for the current pixel
 void calcRay(out Ray ray, in vec2 viewport, in float focalLength,
              in vec2 camRot, in vec3 camPos)
 {
     // ray origin relative to viewer is the origin
-    // w = 1 because it represents a point; can ignore when using
-    ray.origin = vec4(camPos, 1.0);
+    ray.origin = vec4(camPos, 1.0); //SSA: move camera
 
     // ray direction relative to origin is based on viewing plane coordinate
-    // w = 0 because it represents a direction; can ignore when using
     ray.direction = vec4(viewport.x, viewport.y, -focalLength, 0.0);
     
+    //SSA: rotate camera rays
     mat3 xRot = mat3(vec3(1, 0, 0),
                      vec3(0, cos(camRot.x), -sin(camRot.x)),
                      vec3(0, sin(camRot.x),  cos(camRot.x)));
@@ -131,26 +163,6 @@ void calcRay(out Ray ray, in vec2 viewport, in float focalLength,
 // END LAB 3 BOILERPLATE
 
 
-// BEGIN LAB 4 BOILERPLATE
-// These snippets were copy-pasted from the assignment main page
-
-// as_point: promote a 3D vector into a 4D vector representing a point (w=1)
-//    point: input 3D vector to be converted into a point
-vec4 as_point(in vec3 point)
-{
-    return vec4(point, 1.0);
-}
-
-// as_offset: promote a 3D vector into a 4D vector representing an offset (w=0)
-//    offset: input 3D vector to be converted into an offset
-vec4 as_direction(in vec3 offset)
-{
-    return vec4(offset, 0.0);
-}
-
-// END LAB 4 BOILERPLATE
-
-
 // BEGIN LIGHTS
 
 struct PointLight {
@@ -158,30 +170,36 @@ struct PointLight {
     vec4 color; //W/A used as intensity
 };
 
+// Initialize a PointLight
 PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
     PointLight val;
-    val.pos = as_point(center.xyz);
+    val.pos = vec4(center.xyz, 1.);
     val.color.rgb = color;
     val.color.a = abs(intensity);
     return val;
 }
 
+// Attenuation coefficient
 float attenuation_coeff(in float d, in float intensity) {
     return 1./sq(d/intensity+1.);
 }
 
 // BEGIN LAMBERTIAN MODEL
 
-//BOTH INPUTS MUST BE NORMALIZED
+// Lambertian diffuse coefficient
+// BOTH INPUTS MUST BE NORMALIZED
 float lambert_diffuse_coeff(in vec4 light_ray_dir, in vec4 normal) {
     return dot(normal, light_ray_dir);
 }
 
+// Lambertian diffuse coefficient
 float lambert_diffuse_intensity(in PointLight light, in vec4 pos, in vec4 nrm) {
-    vec4 light_vector = normalize(light.pos-pos);
-    return lambert_diffuse_coeff(light_vector, nrm) * attenuation_coeff(length(light_vector), light.color.a);
+    vec4 light_vector = light.pos-pos;
+    float lv_len = length(light_vector);
+    return lambert_diffuse_coeff(light_vector/lv_len, nrm) * attenuation_coeff(lv_len, light.color.a);
 }
 
+// Apply the Lambertian lighting model (only supports one light)
 vec4 lambert_light(in PointLight light, in vec4 color, in vec4 pos, in vec4 nrm) {
     return vec4( lambert_diffuse_intensity(light, pos, nrm) * color.rgb * light.color.rgb, color.a);
 }
@@ -190,13 +208,11 @@ vec4 lambert_light(in PointLight light, in vec4 color, in vec4 pos, in vec4 nrm)
 
 // END LIGHTS
 
-
-// BEGIN OBJECTS
-
 // BEGIN MANDELBULB
 
-// Mandelbulb distance estimation:
+// Mandelbulb distance estimation. We vaguely understand it but it isn't our code.
 // http://blog.hvidtfeldts.net/index.php/2011/09/distance-estimated-3d-fractals-v-the-mandelbulb-different-de-approximations/
+// Via: https://www.youtube.com/watch?v=Cp5WWtMoeKg
 float signedDistance(in vec4 position) {
     vec3 z = position.xyz;
     float dr = 1.0;
@@ -224,13 +240,13 @@ float signedDistance(in vec4 position) {
         z+=position.xyz;
     }
     
-    float dst = 0.5*log(r)*r/dr;
-    return dst*1.;
+    return 0.5*log(r)*r/dr;
 }
 
-//Approximates the normal of the surface
-vec4 normal(in vec4 glob_pos) {
-    float offset = 0.01;
+// Approximates the normal of the surface
+// Offset should probably be dynamic based on view distance, otherwise the image will look noisy.
+// Adapated from http://blog.hvidtfeldts.net/index.php/2011/08/distance-estimated-3d-fractals-ii-lighting-and-coloring/
+vec4 normal(in vec4 glob_pos, in float offset) {
     vec4 xDir = vec4(offset, 0., 0., 0.);
     vec4 yDir = vec4(0., offset, 0., 0.);
     vec4 zDir = vec4(0., 0., offset, 0.);
@@ -239,64 +255,10 @@ vec4 normal(in vec4 glob_pos) {
 		                       signedDistance(glob_pos+zDir)-signedDistance(glob_pos-zDir))), 0.);
 }
 
+// Simple bit of coloring
+// Makes more sense with this architecture than orbit trapping
 vec4 color(in March march) {
     return vec4( march.normal.xyz*0.5+0.5, 1. );
 }
 
 // END MANDELBULB
-
-// END OBJECTS
-
-
-// BEGIN RAYMARCHER
-
-March mk_March(in Ray ray) { March val; val.position = ray; val.closestApproach = MARCH_MAX_DIST; return val; }
-
-float march_step(inout March march) {
-    float d = signedDistance(march.position.origin);
-    march.position.origin += d*march.position.direction;
-    march.distanceMarched += d;
-    march.closestApproach = min(march.closestApproach, d);
-    return d;
-}
-
-March cam_march(in Ray ray) {
-    March march = mk_March(ray);
-    //MARCH CURRENT VALUES: position
-    
-    PointLight l = mk_PointLight(vec4(0.5,0.5,0,1), vec3(1), 16.);
-    
-    float d = MARCH_MAX_DIST; // temp var
-    bool hit, nohit;
-    do {
-        d = march_step(march);
-        
-        ++march.iterations;
-        
-        nohit = march.distanceMarched > MARCH_MAX_DIST || march.iterations > MARCH_MAX_STEPS;
-        hit = d < MARCH_HIT_THRESHOLD;
-    } while(!hit && !nohit);
-    
-    if(hit) {
-        //MARCH CURRENT VALUES: position, distanceMarched, iterations, closestApproach
-
-        march.normal = normal(march.position.origin);
-        march.color = color(march);
-
-        //MARCH FULLY POPULATED
-        //Do lighting
-        march.color = lambert_light(l, march.color, march.position.origin, march.normal);
-    } else {
-        march.normal = -march.position.direction;
-        march.color = vec4(0,0,0,0);
-    }
-    
-    //Haloing
-    float halo = float(march.iterations)/96. - 0.1/max(march.closestApproach,1.);
-    halo = clamp(halo, 0., 1.);
-    march.color.rgb += vec3(1) * halo;
-    march.color.a = 1.-( (1.-march.color.a) * (1.-halo) );
-    
-    return march;
-}
-// END RAYMARCHER

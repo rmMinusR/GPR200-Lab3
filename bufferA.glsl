@@ -1,8 +1,21 @@
-// calculates the camera's movement based on the user's inputs
+/*
+
+Midterm: Fractal raymarcher
+'Buffer A' tab by Sean Sawyers-Abbott, with contributions from Robert Christensen
+
+This shader is an accumulation buffer that manages the camera position and rotation.
+
+Channel setup:
+ 0: self
+ 1: keyboard
+
+*/
+
+// calculates the camera's movement in global space based on the user's inputs
 vec3 calcMovement()
 {
     // gets the camera rotation
-    vec2 camRot = texelFetch(iChannel0, camRotPos, 0).xy;
+    vec2 camRot = texelFetch(iChannel0, camRotInd, 0).xy;
     
     // local right axis
     vec3 right = vec3(cos(camRot.y), 0.0, sin(camRot.y));
@@ -15,6 +28,7 @@ vec3 calcMovement()
     vec3 up = vec3(0., 1., 0.);
     
     // gets the user's key inputs to determine camera movement
+    // "local" 3D movement ranging -1 to 1 on each axis
     vec3 keyInput = vec3( texelFetch(iChannel1, ivec2(KEY_D, 0), 0).r
                          -texelFetch(iChannel1, ivec2(KEY_A, 0), 0).r,
                           texelFetch(iChannel1, ivec2(KEY_W, 0), 0).r
@@ -36,29 +50,28 @@ vec3 calcMovement()
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-    // gets camera's current position
-    vec4 self = texelFetch(iChannel0, ivec2(fragCoord), 0);
-    
     // gets current pixel
     ivec2 posCoord = ivec2(fragCoord.x, fragCoord.y);
     
     // checks if the current pixel is where movement is stored
-    if (posCoord == camPos)
+    if (posCoord == camPosInd)
     {
-        // checks if on the first frame or escape is pressed
+        // initialization to default value: checks if on the first frame or escape is pressed
         if (iFrame == 0 || texelFetch(iChannel1, ivec2(ESC, 0), 0).r == 1.)
         {
             // moves the camera outside of the fractal
-            // slightly offsets the position as for some reason
+            // slightly offsets the XY position as for some reason
             // if it's at 0.0, 0.0, then it will teleport into
             // the fractal upon moving directly forwards
             // or backwards upon start
             fragColor = vec4(0.001, 0.001, 1.5, 0.);
+            //RC: this is because distance estimation messes up around (x=0, y=0)
+            //Take a look at the -Z tip of the fractal and you'll see it break down into pointclouds
         }
         else
         {
             // converts the sampled channel into a texture
-            vec4 camera = texelFetch(iChannel0, camPos, 0);
+            vec4 camera = texelFetch(iChannel0, camPosInd, 0);
             
             // gets the length of the camera
             float lenCam = length(camera);
@@ -80,14 +93,14 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     }
     
     // checks if the current pixel is where mouse position is stored
-    if (posCoord == mousePos)
+    if (posCoord == mouseInd)
     {
         // allows the user to control the camera's rotation with the mouse
         fragColor.xy = iMouse.xy;
     }
     
     // checks if the current pixel is where the camera's rotation is stored
-    if (posCoord == camRotPos)
+    if (posCoord == camRotInd)
     {
         // checks if escape is pressed
         if (texelFetch(iChannel1, ivec2(ESC, 0), 0).r == 1.)
@@ -96,11 +109,11 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
         }
         else
         {
-	        // gets the camera's x and y positions
-	        vec2 camRot = self.xy;
+	        // gets the camera's rotation
+	        vec2 camRot = texelFetch(iChannel0, ivec2(camRotInd), 0).xy;
 	        
 	        // gets the mouse's x and y positions
-	        vec2 deltaMouse = iMouse.xy - texelFetch(iChannel0, mousePos, 0).xy;
+	        vec2 deltaMouse = iMouse.xy - texelFetch(iChannel0, mouseInd, 0).xy;
 	        
 	        // ensures smooth, consistent rotation of the camera
 	        if (length(deltaMouse) < 25.)
