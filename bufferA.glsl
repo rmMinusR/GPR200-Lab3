@@ -88,7 +88,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             
             // calculates the movement while getting slower when it
             // gets closer to the nearest point
-            fragColor = camera + vec4(calcMovement() * dist, 0.0);
+            fragColor = camera + vec4(calcMovement() * dist / iTimeDelta, 0.0);
         }
     }
     

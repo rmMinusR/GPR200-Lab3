@@ -24,7 +24,7 @@ const float MARCH_HIT_THRESHOLD = 0.00001; // How close must we be to be conside
 
 // Mouse and keyboard sensitivity for controlling the camera
 const vec2 mouseSens = vec2(-0.01, 0.01);
-const float moveSens = 0.05;
+const float moveSens = 0.001;
 
 // Mandelbulb parameters
 
@@ -71,12 +71,7 @@ GEN_DECLARE(float) GEN_DECLARE( vec2) GEN_DECLARE( vec3) GEN_DECLARE( vec4)
 #define this _this
 
 // Blend layers based on transparency
-void alpha_blend(vec4 back, vec4 front, out vec4 result) {
-    //Make params bounded (inefficient but necessary here)
-    //This conditional isn't very bad because worst-case isn't expensive
-    back  = clamp(back,  0., 1.);
-    front = clamp(front, 0., 1.);
-    
+void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
     result = vec4( mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
 }
 
@@ -112,7 +107,8 @@ struct March {
 
 // BEGIN LAB 3 BOILERPLATE
 // These snippets were copy-pasted from the assignment main page
-// calcViewport() modified by RC for use in SSAA
+// calcViewport() modified by RC for use in SSAA (currently unused for performance reasons)
+// calcRay() modified by SSA for camera transformation
 
 // Calculate the coordinate on the viewing plane
 void calcViewport(out vec2 viewport, out vec2 px_size, out vec2 ndc, out vec2 uv,
@@ -175,7 +171,7 @@ PointLight mk_PointLight(in vec4 center, in vec3 color, in float intensity) {
     PointLight val;
     val.pos = vec4(center.xyz, 1.);
     val.color.rgb = color;
-    val.color.a = abs(intensity);
+    val.color.a = intensity;
     return val;
 }
 
@@ -210,7 +206,7 @@ vec4 lambert_light(in PointLight light, in vec4 color, in vec4 pos, in vec4 nrm)
 
 // BEGIN MANDELBULB
 
-// Mandelbulb distance estimation. We vaguely understand it but it isn't our code.
+// Mandelbulb distance estimation. We vaguely understand it but it isn't our code--we just optimized it.
 // http://blog.hvidtfeldts.net/index.php/2011/09/distance-estimated-3d-fractals-v-the-mandelbulb-different-de-approximations/
 // Via: https://www.youtube.com/watch?v=Cp5WWtMoeKg
 float signedDistance(in vec4 position) {
@@ -220,24 +216,23 @@ float signedDistance(in vec4 position) {
     
     for (int i = 0; i < 15; ++i) {
         r = length(z);
+		
+        // Escape check
+        if (r<=2.) {
+            // convert to polar coordinates
+            float theta = acos(z.z/r);
+            float phi = atan(z.y,z.x);
+            dr =  pow( r, power-1.0)*power*dr + 1.0;
 
-        if (r>2.) {
-            break;
-        }
-        
-        // convert to polar coordinates
-        float theta = acos(z.z/r);
-        float phi = atan(z.y,z.x);
-        dr =  pow( r, power-1.0)*power*dr + 1.0;
+            // scale and rotate the point
+            float zr = pow( r,power);
+            theta = theta*power;
+            phi = phi*power;
 
-        // scale and rotate the point
-        float zr = pow( r,power);
-        theta = theta*power;
-        phi = phi*power;
-        
-        // convert back to cartesian coordinates
-        z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
-        z+=position.xyz;
+            // convert back to cartesian coordinates
+            z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
+            z+=position.xyz;
+        } else break;
     }
     
     return 0.5*log(r)*r/dr;
