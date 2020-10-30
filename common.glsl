@@ -11,8 +11,8 @@ const int UP = 87;
 const int RIGHT = 68;
 const int DOWN = 83;
 
-const vec2 mouseSens = vec2(0.004, -0.004);
-const vec2 moveSens = vec2(0.1);
+const vec2 mouseSens = vec2(-0.01, 0.01);
+const vec2 moveSens = vec2(0.01);
 
 // coordinates to store each piece of data
 const ivec2 camPos = ivec2(0,0);
@@ -21,6 +21,8 @@ const ivec2 camRotPos = ivec2(2,0);
 
 const float PI = 3.1415926535;
 const float DEG2RAD = PI/180.;
+
+const float power = 10.;
 
 #define this _this
 
@@ -208,8 +210,41 @@ Sphere mk_Sphere(in vec4 center, in float radius) {
     return s;
 }
 
-float signedDistance(in Sphere this, vec4 position) {
+/*float signedDistance(in Sphere this, vec4 position) {
     return length(this.center-position)-this.radius;
+}*/
+
+// Mandelbulb distance estimation:
+// http://blog.hvidtfeldts.net/index.php/2011/09/distance-estimated-3d-fractals-v-the-mandelbulb-different-de-approximations/
+float signedDistance(in vec4 position) {
+    vec3 z = position.xyz;
+    float dr = 1.0;
+    float r = 0.0;
+    
+    for (int i = 0; i < 15; ++i) {
+        r = length(z);
+
+        if (r>2.) {
+            break;
+        }
+        
+        // convert to polar coordinates
+        float theta = acos(z.z/r);
+        float phi = atan(z.y,z.x);
+        dr =  pow( r, power-1.0)*power*dr + 1.0;
+
+        // scale and rotate the point
+        float zr = pow( r,power);
+        theta = theta*power;
+        phi = phi*power;
+        
+        // convert back to cartesian coordinates
+        z = zr*vec3(sin(theta)*cos(phi), sin(phi)*sin(theta), cos(theta));
+        z+=position.xyz;
+    }
+    
+    float dst = 0.5*log(r)*r/dr;
+    return dst*1.;
 }
 
 //Get the *outer* normal of the given sphere.
@@ -221,9 +256,9 @@ vec4 normal(in Sphere this, in vec4 glob_pos) {
     vec4 xDir = vec4(offset, 0., 0., 0.);
     vec4 yDir = vec4(0., offset, 0., 0.);
     vec4 zDir = vec4(0., 0., offset, 0.);
-    return vec4(normalize(vec3(signedDistance(this, glob_pos+xDir)-signedDistance(this, glob_pos-xDir),
-		                       signedDistance(this, glob_pos+yDir)-signedDistance(this, glob_pos-yDir),
-		                       signedDistance(this, glob_pos+zDir)-signedDistance(this, glob_pos-zDir))), 0.);
+    return vec4(normalize(vec3(signedDistance(glob_pos+xDir)-signedDistance(glob_pos-xDir),
+		                       signedDistance(glob_pos+yDir)-signedDistance(glob_pos-yDir),
+		                       signedDistance(glob_pos+zDir)-signedDistance(glob_pos-zDir))), 0.);
 }
 
 vec4 color(in Sphere this, in March march) {
@@ -240,7 +275,7 @@ vec4 color(in Sphere this, in March march) {
 March mk_March(in Ray ray) { March val; val.position = ray; val.closestApproach = MARCH_MAX_DIST; return val; }
 
 float march_step(inout March march, in Sphere sphere) {
-    float d = signedDistance(sphere, march.position.origin);
+    float d = signedDistance(march.position.origin);
     march.position.origin += d*march.position.direction;
     march.distanceMarched += d;
     march.closestApproach = min(march.closestApproach, d);
@@ -284,7 +319,7 @@ March cam_march(in Ray ray) {
     float halo = float(march.iterations)/float(MARCH_MAX_STEPS) - 0.1/max(march.closestApproach,1.);
     //halo *= halo;
     //halo = pow(halo, 1.5);
-    march.color += vec4(1) * halo;
+    //march.color += vec4(1) * halo;
     
     return march;
 }
