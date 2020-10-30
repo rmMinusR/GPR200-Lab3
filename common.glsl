@@ -1,3 +1,11 @@
+/*
+
+ - "Folding" functions
+    - Mandelbox
+    - Customs?
+
+*/
+
 const int INT_MAX = 0xFFFFFFFF;
 const float FLOAT_MAX = float(INT_MAX); // FIXME
 
@@ -11,7 +19,7 @@ const int UP = 87;
 const int RIGHT = 68;
 const int DOWN = 83;
 
-const vec2 mouseSens = vec2(-0.01, 0.01);
+const vec2 mouseSens = vec2(-0.004, 0.004);
 const vec2 moveSens = vec2(0.01);
 
 // coordinates to store each piece of data
@@ -22,6 +30,7 @@ const ivec2 camRotPos = ivec2(2,0);
 const float PI = 3.1415926535;
 const float DEG2RAD = PI/180.;
 
+//#define power (1.+\mod(iTime/8., 1.)*8.)
 const float power = 10.;
 
 #define this _this
@@ -191,28 +200,7 @@ vec4 lambert_light(in PointLight light, in vec4 color, in vec4 pos, in vec4 nrm)
 
 // BEGIN OBJECTS
 
-// BEGIN SPHERE
-
-struct Sphere {
-    vec4 center;
-    float radius;
-};
-
-Sphere mk_Sphere(in vec4 center, in float radius) {
-    Sphere s;
-    if(radius > 0. && center.w == 1.) {
-        s.center = center;
-        s.radius = radius;
-    } else {
-        s.center = vec4(0,0,0,1);
-        s.radius = 1.;
-    }
-    return s;
-}
-
-/*float signedDistance(in Sphere this, vec4 position) {
-    return length(this.center-position)-this.radius;
-}*/
+// BEGIN MANDELBULB
 
 // Mandelbulb distance estimation:
 // http://blog.hvidtfeldts.net/index.php/2011/09/distance-estimated-3d-fractals-v-the-mandelbulb-different-de-approximations/
@@ -247,11 +235,8 @@ float signedDistance(in vec4 position) {
     return dst*1.;
 }
 
-//Get the *outer* normal of the given sphere.
-//Inner normal isn't necessary because inner faces are culled.
-vec4 normal(in Sphere this, in vec4 glob_pos) {
-    //return normalize(global_pos-this.center);
-    //return (global_pos-this.center)/this.radius;
+//Approximates the normal of the surface
+vec4 normal(in vec4 glob_pos) {
     float offset = 0.01;
     vec4 xDir = vec4(offset, 0., 0., 0.);
     vec4 yDir = vec4(0., offset, 0., 0.);
@@ -261,11 +246,11 @@ vec4 normal(in Sphere this, in vec4 glob_pos) {
 		                       signedDistance(glob_pos+zDir)-signedDistance(glob_pos-zDir))), 0.);
 }
 
-vec4 color(in Sphere this, in March march) {
-    return vec4( march.normal.rgb*0.5+0.5, 1. );
+vec4 color(in March march) {
+    return vec4( march.normal.xyz*0.5+0.5, 1. );
 }
 
-// END SPHERE
+// END MANDELBULB
 
 // END OBJECTS
 
@@ -274,7 +259,7 @@ vec4 color(in Sphere this, in March march) {
 
 March mk_March(in Ray ray) { March val; val.position = ray; val.closestApproach = MARCH_MAX_DIST; return val; }
 
-float march_step(inout March march, in Sphere sphere) {
+float march_step(inout March march) {
     float d = signedDistance(march.position.origin);
     march.position.origin += d*march.position.direction;
     march.distanceMarched += d;
@@ -286,40 +271,38 @@ March cam_march(in Ray ray) {
     March march = mk_March(ray);
     //MARCH CURRENT VALUES: position
     
-    Sphere s = mk_Sphere(vec4(0,0,-1.5,1),1.);
     PointLight l = mk_PointLight(vec4(0.5,0.5,0,1), vec3(1), 16.);
     
     float d = FLOAT_MAX; // temp var
     bool hit, nohit;
     do {
-        d = march_step(march, s);
+        d = march_step(march);
         
         ++march.iterations;
         
-        nohit = march.distanceMarched > MARCH_MAX_DIST || march.iterations > MARCH_MAX_STEPS;
+        nohit = march.distanceMarched > MARCH_MAX_DIST;// || march.iterations > MARCH_MAX_STEPS;
         hit = d < MARCH_HIT_THRESHOLD;
     } while(!hit && !nohit);
     
     if(hit) {
         //MARCH CURRENT VALUES: position, distanceMarched, iterations, closestApproach
 
-        march.normal = normal(s, march.position.origin);
-        march.color = color(s, march);
+        march.normal = normal(march.position.origin);
+        march.color = color(march);
 
         //MARCH FULLY POPULATED
 
-        //Do lighting (mixed so it isn't entirely black in shadow)
-        march.color = mix(march.color, lambert_light(l, march.color, march.position.origin, march.normal), 0.8);
+        //Do lighting
+        march.color = lambert_light(l, march.color, march.position.origin, march.normal);
     } else {
         march.normal = -march.position.direction;
-        march.color = vec4(0,0,0,1);
+        march.color = vec4(0,0,0,0);
     }
     
     //Haloing
     float halo = float(march.iterations)/float(MARCH_MAX_STEPS) - 0.1/max(march.closestApproach,1.);
-    //halo *= halo;
-    //halo = pow(halo, 1.5);
-    //march.color += vec4(1) * halo;
+    march.color.rgb += vec3(1) * halo;
+    march.color.a = 1.-( (1.-march.color.a) * (1.-halo) );
     
     return march;
 }

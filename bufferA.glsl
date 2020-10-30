@@ -6,8 +6,14 @@ const float focalLength = 1.0;
 #define clamp01(x) clamp(x, 0., 1.)
 
 //Blend layers based on alpha
-void alpha_blend(in vec4 back, in vec4 front, out vec4 result) {
-    result = vec4( mix(back, front, front.a).rgb, 1.-( (1.-back.a)*(1.-front.a) ) );
+void alpha_blend(vec4 back, vec4 front, out vec4 result) {
+    //Make params bounded
+    back = clamp01(back);
+    front = clamp01(front);
+    
+    float blend_weight = 1.-( (1.-back.a)*(1.-front.a) );
+    
+    result = vec4( mix(back, front, front.a).rgb, blend_weight );
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -30,5 +36,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     
     March march = cam_march(ray);
     
+    //fragColor.r = march.color.a;
+    //fragColor.g = march.distanceMarched;
     alpha_blend(texture(iChannel1, ray.direction.xyz), clamp01(march.color), fragColor);
 }
