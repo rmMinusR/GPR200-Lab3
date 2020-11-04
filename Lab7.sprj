@@ -7,7 +7,7 @@
 			<inputlayout>
 				<item value="Position" semantic="POSITION" />
 				<item value="Normal" semantic="NORMAL" />
-				<item value="Texcoord" />
+				<item value="Texcoord" semantic="NORMAL" />
 			</inputlayout>
 			<rendertexture />
 			<items>
@@ -40,13 +40,13 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="LitSphere" item="pipe" />
+		<entry type="property" name="8081_earthmap10k.jpg" item="image3D" />
 		<entry type="file" name="LitSphere" shader="vs" />
 		<entry type="file" name="LitSphere" shader="ps" />
 		<entry type="camera" fp="false">
 			<distance>3</distance>
-			<pitch>17</pitch>
-			<yaw>177</yaw>
+			<pitch>9</pitch>
+			<yaw>193</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
