@@ -7,6 +7,7 @@
 			<inputlayout>
 				<item value="Position" semantic="POSITION" />
 				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" />
 			</inputlayout>
 			<rendertexture />
 			<items>
@@ -26,7 +27,17 @@
 			<macros />
 		</pass>
 	</pipeline>
-	<objects />
+	<objects>
+		<object type="texture" path="8081_earthmap10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
+			<bind slot="0" name="LitSphere" />
+		</object>
+		<object type="texture" path="8081_earthspec10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
+			<bind slot="1" name="LitSphere" />
+		</object>
+		<object type="texture" path="8081_earthbump10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
+			<bind slot="2" name="LitSphere" />
+		</object>
+	</objects>
 	<cameras />
 	<settings>
 		<entry type="file" name="LitSphere" shader="vs" />
