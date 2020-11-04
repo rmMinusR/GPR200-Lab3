@@ -36,7 +36,7 @@
 			</inputlayout>
 			<rendertexture />
 			<items>
-				<item name="Sphere" type="geometry">
+				<item name="Sphere2" type="geometry">
 					<type>Sphere</type>
 					<width>1</width>
 					<height>1</height>
@@ -71,12 +71,10 @@
 		<entry type="property" name="Sphere" item="pipe" />
 		<entry type="file" name="VertexLit-ViewSpace" shader="vs" />
 		<entry type="file" name="VertexLit-ViewSpace" shader="ps" />
-		<entry type="file" name="PixelLit-ViewSpace" shader="vs" />
-		<entry type="file" name="PixelLit-ViewSpace" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>3</distance>
-			<pitch>9</pitch>
-			<yaw>193</yaw>
+			<distance>11</distance>
+			<pitch>5</pitch>
+			<yaw>179</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
