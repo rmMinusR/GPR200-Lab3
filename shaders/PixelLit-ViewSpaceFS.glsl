@@ -5,7 +5,6 @@ uniform mat4 mViewport;
 uniform sampler2D texDiff;
 uniform sampler2D texSpec;
 
-in vec4 vertColor;
 in vec4 vertPos;
 in vec4 vertNormal;
 in vec2 vertUV;

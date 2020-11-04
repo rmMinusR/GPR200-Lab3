@@ -33,32 +33,27 @@ float lambert(in vec4 lightVector, in vec4 normal, in Light light, in float d) {
 	return diffuse_coeff * attenuated_intensity;
 }
 
-void phong(out vec3 specIntensity, out vec3 diffuseIntensity, vec4 view_pos, vec4 pos, vec4 normal, in Light light) {
-	vec4 viewVector = normalize(view_pos-pos);
-	vec4 lightVector = light.position-pos;
-	float lightVecLength = length(lightVector);
-	lightVector /= lightVecLength;
+float phong(vec4 lightVector, vec4 viewVector, vec4 normal, in Light light) {
 	vec4 reflectedLightVector = reflect(lightVector, normal);
-	
 	float ks = max(0., dot(viewVector, reflectedLightVector));
-	
-	specIntensity = vec3(pow(ks, 4));
-	
-	diffuseIntensity = vec3(lambert(lightVector, normal, light, lightVecLength));
+	return pow(ks, 4);
 }
 
 void main() {
-	vec4 vp_pos = vec4(mViewport[0].w, mViewport[1].w, mViewport[2].w, 1.);
+	vec4 view_pos = vec4(mViewport[0].w, mViewport[1].w, mViewport[2].w, 1.);
 	
 	Light light;
 	light.position = vec4(1, 2, 3, 1);
 	light.color = vec3(1, 1, 1);
 	light.intensity = 4.;
 	
-	phong(specIntensity, diffuseIntensity, vp_pos, pos, normal, light);
+	vec4 viewVector = normalize(view_pos-pos);
+	vec4 lightVector = light.position-pos;
+	float distToLight = length(lightVector);
+	lightVector /= distToLight;
 	
-	specIntensity *= light.color;
-	diffuseIntensity *= light.color;
+	specIntensity    = light.color * phong(lightVector, viewVector, normal, light);
+	diffuseIntensity = light.color * lambert(lightVector, normal, light, distToLight);
 	
 	vecUv = uv;
 	
