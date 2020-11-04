@@ -23,10 +23,70 @@
 			<variables>
 				<variable type="float4x4" name="mViewport" system="ViewProjection" />
 				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+				<variable type="float4" name="light0.position">
+					<row>
+						<value>-5</value>
+						<value>5</value>
+						<value>5</value>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light0.color">
+					<row>
+						<value>1</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light0.intensity">
+					<row>
+						<value>10</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light1.position">
+					<row>
+						<value>5</value>
+						<value>-5</value>
+						<value>5</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light1.color">
+					<row>
+						<value>0</value>
+						<value>1</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light1.intensity">
+					<row>
+						<value>10</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light2.position">
+					<row>
+						<value>5</value>
+						<value>5</value>
+						<value>-5</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light2.color">
+					<row>
+						<value>0</value>
+						<value>1.02715177e-42</value>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float" name="light2.intensity">
+					<row>
+						<value>10</value>
+					</row>
+				</variable>
 			</variables>
 			<macros />
 		</pass>
-		<pass name="PixelLit-ViewSpace" type="shader" active="true">
+		<pass name="PixelLit-ViewSpace" type="shader" active="false">
 			<shader type="vs" path="shaders\PixelLit-ViewSpaceVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\PixelLit-ViewSpaceFS.glsl" entry="main" />
 			<inputlayout>
@@ -130,8 +190,6 @@
 	<settings>
 		<entry type="file" name="PixelLit-ViewSpace" shader="vs" />
 		<entry type="file" name="PixelLit-ViewSpace" shader="ps" />
-		<entry type="file" name="VertexLit-ViewSpace" shader="vs" />
-		<entry type="file" name="VertexLit-ViewSpace" shader="ps" />
 		<entry type="pinned" name="light0.position" owner="PixelLit-ViewSpace" />
 		<entry type="pinned" name="light0.color" owner="PixelLit-ViewSpace" />
 		<entry type="pinned" name="light0.intensity" owner="PixelLit-ViewSpace" />
@@ -141,10 +199,20 @@
 		<entry type="pinned" name="light2.position" owner="PixelLit-ViewSpace" />
 		<entry type="pinned" name="light2.color" owner="PixelLit-ViewSpace" />
 		<entry type="pinned" name="light2.intensity" owner="PixelLit-ViewSpace" />
+		<entry type="file" name="VertexLit-ViewSpace" shader="vs" />
+		<entry type="file" name="VertexLit-ViewSpace" shader="ps" />
+		<entry type="pinned" name="light0.position" owner="VertexLit-ViewSpace" />
+		<entry type="pinned" name="light0.color" owner="VertexLit-ViewSpace" />
+		<entry type="pinned" name="light0.intensity" owner="VertexLit-ViewSpace" />
+		<entry type="pinned" name="light1.position" owner="VertexLit-ViewSpace" />
+		<entry type="pinned" name="light1.color" owner="VertexLit-ViewSpace" />
+		<entry type="pinned" name="light1.intensity" owner="VertexLit-ViewSpace" />
+		<entry type="pinned" name="light2.position" owner="VertexLit-ViewSpace" />
+		<entry type="pinned" name="light2.intensity" owner="VertexLit-ViewSpace" />
 		<entry type="camera" fp="false">
-			<distance>3</distance>
-			<pitch>69</pitch>
-			<yaw>297</yaw>
+			<distance>6</distance>
+			<pitch>15</pitch>
+			<yaw>220</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
