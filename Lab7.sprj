@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <project version="2">
 	<pipeline>
-		<pass name="LitSphere" type="shader" active="true">
-			<shader type="vs" path="shaders\LitSphereVS.glsl" entry="main" />
-			<shader type="ps" path="shaders\LitSpehreFS.glsl" entry="main" />
+		<pass name="VertexLit-ViewSpace" type="shader" active="true">
+			<shader type="vs" path="shaders\VertexLit-ViewSpaceVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\VertexLit-ViewSpaceFS.glsl" entry="main" />
 			<inputlayout>
 				<item value="Position" semantic="POSITION" />
 				<item value="Normal" semantic="NORMAL" />
-				<item value="Texcoord" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
 			</inputlayout>
 			<rendertexture />
 			<items>
@@ -29,23 +29,24 @@
 	</pipeline>
 	<objects>
 		<object type="texture" path="8081_earthmap10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
-			<bind slot="0" name="LitSphere" />
+			<bind slot="0" name="VertexLit-ViewSpace" />
 		</object>
 		<object type="texture" path="8081_earthspec10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
-			<bind slot="1" name="LitSphere" />
+			<bind slot="1" name="VertexLit-ViewSpace" />
 		</object>
 		<object type="texture" path="8081_earthbump10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
-			<bind slot="2" name="LitSphere" />
+			<bind slot="2" name="VertexLit-ViewSpace" />
 		</object>
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="file" name="LitSphere" shader="vs" />
-		<entry type="file" name="LitSphere" shader="ps" />
+		<entry type="property" name="Sphere" item="pipe" />
+		<entry type="file" name="VertexLit-ViewSpace" shader="vs" />
+		<entry type="file" name="VertexLit-ViewSpace" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>3</distance>
-			<pitch>20</pitch>
-			<yaw>198</yaw>
+			<distance>5</distance>
+			<pitch>25</pitch>
+			<yaw>216</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
