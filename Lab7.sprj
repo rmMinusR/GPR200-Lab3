@@ -40,13 +40,12 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="LitSphere" item="pipe" />
 		<entry type="file" name="LitSphere" shader="vs" />
 		<entry type="file" name="LitSphere" shader="ps" />
 		<entry type="camera" fp="false">
 			<distance>3</distance>
-			<pitch>17</pitch>
-			<yaw>177</yaw>
+			<pitch>20</pitch>
+			<yaw>198</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
