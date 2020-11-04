@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project version="2">
 	<pipeline>
-		<pass name="VertexLit-ViewSpace" type="shader" active="true">
+		<pass name="VertexLit-ViewSpace" type="shader" active="false">
 			<shader type="vs" path="shaders\VertexLit-ViewSpaceVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\VertexLit-ViewSpaceFS.glsl" entry="main" />
 			<inputlayout>
@@ -48,6 +48,66 @@
 			<variables>
 				<variable type="float4x4" name="mViewport" system="ViewProjection" />
 				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+				<variable type="float4" name="light0.position">
+					<row>
+						<value>5</value>
+						<value>0</value>
+						<value>0</value>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light0.color">
+					<row>
+						<value>1</value>
+						<value>0.5</value>
+						<value>0.5</value>
+					</row>
+				</variable>
+				<variable type="float" name="light0.intensity">
+					<row>
+						<value>128</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light1.position">
+					<row>
+						<value>0</value>
+						<value>5</value>
+						<value>0</value>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light1.color">
+					<row>
+						<value>0.5</value>
+						<value>1</value>
+						<value>0.5</value>
+					</row>
+				</variable>
+				<variable type="float" name="light1.intensity">
+					<row>
+						<value>128</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light2.position">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>5</value>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light2.color">
+					<row>
+						<value>0.5</value>
+						<value>0.5</value>
+						<value>1</value>
+					</row>
+				</variable>
+				<variable type="float" name="light2.intensity">
+					<row>
+						<value>128</value>
+					</row>
+				</variable>
 			</variables>
 			<macros />
 		</pass>
@@ -68,13 +128,23 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="Sphere" item="pipe" />
+		<entry type="file" name="PixelLit-ViewSpace" shader="vs" />
+		<entry type="file" name="PixelLit-ViewSpace" shader="ps" />
 		<entry type="file" name="VertexLit-ViewSpace" shader="vs" />
 		<entry type="file" name="VertexLit-ViewSpace" shader="ps" />
+		<entry type="pinned" name="light0.position" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light0.color" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light0.intensity" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light1.position" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light1.color" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light1.intensity" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light2.position" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light2.color" owner="PixelLit-ViewSpace" />
+		<entry type="pinned" name="light2.intensity" owner="PixelLit-ViewSpace" />
 		<entry type="camera" fp="false">
-			<distance>11</distance>
-			<pitch>5</pitch>
-			<yaw>179</yaw>
+			<distance>3</distance>
+			<pitch>69</pitch>
+			<yaw>297</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />

@@ -22,6 +22,6 @@ out vec2 vertUV;
 void main() {
 	vertPos = mModel * pos;
 	vertNormal = vec4((mModel * normal).xyz, 0); //Have to ensure w=0 because SHADERed sets it to 1
-	vertUV = uv;
+	vertUV = uv*vec2(1,-1);
 	gl_Position = mViewport * mModel * pos;
 }

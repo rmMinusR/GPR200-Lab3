@@ -17,6 +17,8 @@ struct Light {
 	float intensity;
 };
 
+uniform Light light0, light1, light2;
+
 float sq(float v) { return v*v; }
 
 vec3 lambert(in vec4 lightVector, in vec4 normal, in vec3 diffuse_color, in Light light, in float d) {
@@ -40,19 +42,19 @@ vec3 phong(vec4 view_pos, vec4 pos, vec4 normal, vec3 diffuse_color, vec3 spec_c
 	
 	vec3 lambert_reflect = lambert(lightVector, normal, diffuse_color, light, lightDist);
 	
-	return vec3(0) + (lambert_reflect + spec_intensity*spec_color) * light.color;
+	return (lambert_reflect + spec_intensity*spec_color) * light.color;
 }
 
 void main() {
 	vec4 vp_pos = vec4(mViewport[0].w, mViewport[1].w, mViewport[2].w, 1.);
 	
-	Light light;
-	light.position = vec4(3, 4, 5, 1);
-	light.color = vec3(1, 1, 1);
-	light.intensity = 128;
-	
 	vec3 diffuse_color = texture(texDiff, vertUV).rgb;
 	vec3 spec_color =    texture(texSpec, vertUV).rgb;
+	vec4 n_vertNormal = normalize(vertNormal);
 	
-	fragColor = vec4( phong(vp_pos, vertPos, normalize(vertNormal), diffuse_color, spec_color, light), 1);
+	fragColor = vec4(
+		phong(vp_pos, vertPos, normalize(vertNormal), diffuse_color, spec_color, light0)
+	  + phong(vp_pos, vertPos, normalize(vertNormal), diffuse_color, spec_color, light1)
+	  + phong(vp_pos, vertPos, normalize(vertNormal), diffuse_color, spec_color, light2),
+	1);
 }
