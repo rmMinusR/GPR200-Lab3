@@ -26,16 +26,44 @@
 			</variables>
 			<macros />
 		</pass>
+		<pass name="PixelLit-ViewSpace" type="shader" active="true">
+			<shader type="vs" path="shaders\PixelLit-ViewSpaceVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\PixelLit-ViewSpaceFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="Sphere" type="geometry">
+					<type>Sphere</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float4x4" name="mViewport" system="ViewProjection" />
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+			</variables>
+			<macros />
+		</pass>
 	</pipeline>
 	<objects>
 		<object type="texture" path="8081_earthmap10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
 			<bind slot="0" name="VertexLit-ViewSpace" />
+			<bind slot="0" name="PixelLit-ViewSpace" />
 		</object>
 		<object type="texture" path="8081_earthspec10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
 			<bind slot="1" name="VertexLit-ViewSpace" />
+			<bind slot="1" name="PixelLit-ViewSpace" />
 		</object>
 		<object type="texture" path="8081_earthbump10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
 			<bind slot="2" name="VertexLit-ViewSpace" />
+			<bind slot="2" name="PixelLit-ViewSpace" />
 		</object>
 	</objects>
 	<cameras />
@@ -43,10 +71,12 @@
 		<entry type="property" name="Sphere" item="pipe" />
 		<entry type="file" name="VertexLit-ViewSpace" shader="vs" />
 		<entry type="file" name="VertexLit-ViewSpace" shader="ps" />
+		<entry type="file" name="PixelLit-ViewSpace" shader="vs" />
+		<entry type="file" name="PixelLit-ViewSpace" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>5</distance>
-			<pitch>25</pitch>
-			<yaw>216</yaw>
+			<distance>3</distance>
+			<pitch>9</pitch>
+			<yaw>193</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
