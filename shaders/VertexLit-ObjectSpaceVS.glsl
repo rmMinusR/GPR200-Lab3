@@ -26,8 +26,6 @@ struct Light {
 
 uniform Light light0, light1, light2;
 
-uniform float time;
-
 float sq(float v) { return v*v; }
 
 float lambert(in vec4 lightVector, in vec4 normal, in Light light, in float d) {
@@ -36,7 +34,7 @@ float lambert(in vec4 lightVector, in vec4 normal, in Light light, in float d) {
 	return diffuse_coeff * attenuated_intensity;
 }
 
-float phong(vec4 lightVector, vec4 viewVector, vec4 normal) {
+float phong(vec4 lightVector, vec4 viewVector, vec4 normal, in Light light) {
 	vec4 reflectedLightVector = reflect(lightVector, normal);
 	float ks = max(0., dot(viewVector, reflectedLightVector));
 	return pow(ks, 2);
@@ -56,27 +54,14 @@ void main() {
 	float distToLight2 = length(lightVector2);
 	lightVector2 /= distToLight2;
 	
-	float s = 1/tan(90*3.1415926/360);
-	float n = 1, f = 100;
-	mat4 vpMat = mat4(s, 0, 0, 0,
-					  0, s, 0, 0,
-					  0, 0, -f/(f-n), -f*n/(f-n),
-					  0, 0, -1, 0);
-	float x = 0, y = 0, z = -5;
-	mat4 matCameraTransform = mat4(cos(time), -sin(time), 0, 0,
-								   sin(time), cos(time), 0, 0,
-								   0, 0, 1, 0,
-								   x, y, z, 1);
-	view_pos.xyz = vec3(x, y, z);
-	
-	specIntensity 	 = step(0.5, phong(lightVector0, viewVector, normal)) * light0.color
-					 + step(0.5, phong(lightVector1, viewVector, normal)) * light1.color
-					 + step(0.5, phong(lightVector2, viewVector, normal)) * light2.color;
-	diffuseIntensity = (step(0.5, lambert(lightVector0, normal, light0, distToLight0)) * 0.9 + 0.1) * light0.color
-					 + (step(0.5, lambert(lightVector1, normal, light1, distToLight1)) * 0.9 + 0.1) * light1.color
-					 + (step(0.5, lambert(lightVector2, normal, light2, distToLight2)) * 0.9 + 0.1) * light2.color;
+	specIntensity     = light0.color * phong(lightVector0, viewVector, normal, light0);
+	specIntensity    += light1.color * phong(lightVector1, viewVector, normal, light1);
+	specIntensity    += light2.color * phong(lightVector2, viewVector, normal, light2);
+	diffuseIntensity  = light0.color * lambert(lightVector0, normal, light0, distToLight0);
+	diffuseIntensity += light1.color * lambert(lightVector1, normal, light1, distToLight1);
+	diffuseIntensity += light2.color * lambert(lightVector2, normal, light2, distToLight2);
 	
 	vecUv = uv;
 	
-	gl_Position = vpMat * matCameraTransform * (mModel * pos);
+	gl_Position = mViewport * mModel * pos;
 }
