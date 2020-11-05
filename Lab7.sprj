@@ -173,7 +173,7 @@
 			</variables>
 			<macros />
 		</pass>
-		<pass name="PixelLit-ObjectSpace" type="shader" active="true">
+		<pass name="PixelLit-ObjectSpace" type="shader" active="false">
 			<shader type="vs" path="shaders\PixelLit-ObjectSpaceVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\PixelLit-ObjectSpaceFS.glsl" entry="main" />
 			<inputlayout>
@@ -193,72 +193,72 @@
 			</items>
 			<itemvalues />
 			<variables>
-				<variable type="float4x4" name="mViewport" system="ViewportSize" />
+				<variable type="float4x4" name="mViewport" system="ViewProjection" />
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
 				<variable type="float4" name="light0.position">
 					<row>
+						<value>5</value>
 						<value>0</value>
 						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light0.color">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>1</value>
+						<value>0.5</value>
+						<value>0.5</value>
 					</row>
 				</variable>
 				<variable type="float" name="light0.intensity">
 					<row>
-						<value>0</value>
+						<value>128</value>
 					</row>
 				</variable>
 				<variable type="float4" name="light1.position">
 					<row>
 						<value>0</value>
+						<value>5</value>
 						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light1.color">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>0.5</value>
+						<value>1</value>
+						<value>0.5</value>
 					</row>
 				</variable>
 				<variable type="float" name="light1.intensity">
 					<row>
-						<value>0</value>
+						<value>128</value>
 					</row>
 				</variable>
 				<variable type="float4" name="light2.position">
 					<row>
 						<value>0</value>
 						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>5</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light2.color">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>0.5</value>
+						<value>0.5</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float" name="light2.intensity">
 					<row>
-						<value>0</value>
+						<value>128</value>
 					</row>
 				</variable>
-				<variable type="float4x4" name="mModel" system="GeometryTransform" />
 			</variables>
 			<macros />
 		</pass>
-		<pass name="VertexLit-ObjectSpace" type="shader" active="true">
+		<pass name="VertexLit-ObjectSpace" type="shader" active="false">
 			<shader type="vs" path="shaders\VertexLit-ObjectSpaceVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\VertexLit-ObjectSpaceFS.glsl" entry="main" />
 			<inputlayout>
@@ -278,68 +278,68 @@
 			</items>
 			<itemvalues />
 			<variables>
-				<variable type="float4x4" name="mViewport" system="ViewportSize" />
+				<variable type="float4x4" name="mViewport" system="ViewProjection" />
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
 				<variable type="float4" name="light0.position">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>-5</value>
+						<value>5</value>
+						<value>5</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light0.color">
 					<row>
-						<value>0</value>
+						<value>1</value>
 						<value>0</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float" name="light0.intensity">
 					<row>
-						<value>0</value>
+						<value>10</value>
 					</row>
 				</variable>
 				<variable type="float4" name="light1.position">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>5</value>
+						<value>-5</value>
+						<value>5</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light1.color">
 					<row>
 						<value>0</value>
-						<value>0</value>
+						<value>1</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float" name="light1.intensity">
 					<row>
-						<value>0</value>
+						<value>10</value>
 					</row>
 				</variable>
 				<variable type="float4" name="light2.position">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>5</value>
+						<value>5</value>
+						<value>-5</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light2.color">
 					<row>
 						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>1.02715177e-42</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float" name="light2.intensity">
 					<row>
-						<value>0</value>
+						<value>10</value>
 					</row>
 				</variable>
-				<variable type="float4x4" name="mModel" system="GeometryTransform" />
 			</variables>
 			<macros />
 		</pass>
@@ -348,19 +348,25 @@
 		<object type="texture" path="8081_earthmap10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
 			<bind slot="0" name="CustomProjection" />
 			<bind slot="0" name="CelShaded" />
+			<bind slot="0" name="PixelLit-ObjectSpace" />
+			<bind slot="0" name="VertexLit-ObjectSpace" />
 		</object>
 		<object type="texture" path="8081_earthspec10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
 			<bind slot="1" name="CustomProjection" />
 			<bind slot="1" name="CelShaded" />
+			<bind slot="1" name="PixelLit-ObjectSpace" />
+			<bind slot="1" name="VertexLit-ObjectSpace" />
 		</object>
 		<object type="texture" path="8081_earthbump10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
 			<bind slot="2" name="CustomProjection" />
 			<bind slot="2" name="CelShaded" />
+			<bind slot="2" name="PixelLit-ObjectSpace" />
+			<bind slot="2" name="VertexLit-ObjectSpace" />
 		</object>
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="VertexLit-ObjectSpace" item="pipe" />
+		<entry type="property" name="PixelLit-ObjectSpace" item="pipe" />
 		<entry type="pinned" name="light0.position" owner="CustomProjection" />
 		<entry type="pinned" name="light0.color" owner="CustomProjection" />
 		<entry type="pinned" name="light0.intensity" owner="CustomProjection" />
@@ -372,8 +378,8 @@
 		<entry type="pinned" name="light2.intensity" owner="CustomProjection" />
 		<entry type="camera" fp="false">
 			<distance>5</distance>
-			<pitch>29</pitch>
-			<yaw>214</yaw>
+			<pitch>13</pitch>
+			<yaw>263</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
