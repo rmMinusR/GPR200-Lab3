@@ -21,28 +21,31 @@ uniform Light light0, light1, light2;
 
 float sq(float v) { return v*v; }
 
-vec3 lambert(in vec4 lightVector, in vec4 normal, in vec3 diffuse_color, in Light light, in float d) {
+float lambert(in vec4 lightVector, in vec4 normal, in Light light, in float d) {
 	float diffuse_coeff = max(0., dot(normal, lightVector));
 	float attenuated_intensity = 1./sq(d/light.intensity+1.);
-	float diffuse_intensity = diffuse_coeff * attenuated_intensity;
-	
-	return diffuse_intensity*diffuse_color;
+	return diffuse_coeff * attenuated_intensity;
 }
 
-vec3 phong(vec4 view_pos, vec4 pos, vec4 normal, vec3 diffuse_color, vec3 spec_color, in Light light) {
+float phong(in vec4 viewVector, in vec4 reflectedLightVector) {
+	float ks = max(0., dot(viewVector, reflectedLightVector));
+	return pow(ks, 128);
+}
+
+vec3 doLighting(vec4 view_pos, vec4 pos, vec4 normal, in vec3 diffuseColor, in vec3 specularColor, in Light light) {
 	vec4 viewVector = normalize(view_pos-pos);
 	vec4 lightVector = light.position-pos;
 	float lightDist = length(lightVector);
 	lightVector /= lightDist;
 	vec4 reflectedLightVector = reflect(lightVector, normal);
 	
-	float ks = max(0., dot(viewVector, reflectedLightVector));
+	float diffuseIntensity = lambert(lightVector, normal, light, lightDist);
+	float specularIntensity = phong(viewVector, reflectedLightVector);
 	
-	float spec_intensity = pow(ks, 128);
+	specularIntensity = step(0.5, specularIntensity);
+	diffuseIntensity = step(0.5, diffuseIntensity) * 0.9 + 0.1;
 	
-	vec3 lambert_reflect = lambert(lightVector, normal, diffuse_color, light, lightDist);
-	
-	return (lambert_reflect + spec_intensity*spec_color) * light.color;
+	return (diffuseIntensity * diffuseColor + specularIntensity * specularColor) * light.color;
 }
 
 void main() {
@@ -52,9 +55,7 @@ void main() {
 	vec3 spec_color =    texture(texSpec, vertUV).rgb;
 	vec4 n_vertNormal = normalize(vertNormal);
 	
-	fragColor = vec4(
-		phong(vp_pos, vertPos, normalize(vertNormal), diffuse_color, spec_color, light0)
-	  + phong(vp_pos, vertPos, normalize(vertNormal), diffuse_color, spec_color, light1)
-	  + phong(vp_pos, vertPos, normalize(vertNormal), diffuse_color, spec_color, light2),
-	1);
+	fragColor = vec4(doLighting(vp_pos, vertPos, n_vertNormal, diffuse_color, spec_color, light0)
+					+doLighting(vp_pos, vertPos, n_vertNormal, diffuse_color, spec_color, light1)
+					+doLighting(vp_pos, vertPos, n_vertNormal, diffuse_color, spec_color, light2), 1);
 }
