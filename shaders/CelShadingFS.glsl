@@ -1,5 +1,9 @@
 #version 330
 
+#ifdef GL_ES
+precision highp float;
+#endif
+
 uniform mat4 mViewport;
 
 uniform sampler2D texDiff;

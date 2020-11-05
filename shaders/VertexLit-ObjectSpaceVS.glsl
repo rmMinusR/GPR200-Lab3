@@ -1,8 +1,5 @@
 #version 330
 
-#extension GL_GOOGLE_include_directive : enable
-//#include </common.glsl>
-
 #ifdef GL_ES
 precision highp float;
 #endif//GL_ES

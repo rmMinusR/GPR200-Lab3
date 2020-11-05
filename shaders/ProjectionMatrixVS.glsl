@@ -1,6 +1,8 @@
 #version 330
 
+#ifdef GL_ES
 precision highp float;
+#endif
 
 uniform mat4 mViewport;
 uniform mat4 mModel;
@@ -38,7 +40,8 @@ float phong(vec4 lightVector, vec4 viewVector, vec4 normal) {
 }
 
 void main() {
-	vec4 view_pos = vec4(mViewport[0].w, mViewport[1].w, mViewport[2].w, 1.);
+	float x = 0, y = 0, z = -5;
+	vec4 view_pos = vec4(x, y, z, 1.);
 	
 	vec4 viewVector = normalize(view_pos-pos);
 	vec4 lightVector0 = light0.position-pos;
@@ -57,7 +60,6 @@ void main() {
 					  0, s, 0, 0,
 					  0, 0, -f/(f-n), -f*n/(f-n),
 					  0, 0, -1, 0);
-	float x = 0, y = 0, z = -5;
 	mat4 matCameraTransform = mat4(cos(time), -sin(time), 0, 0,
 								   sin(time), cos(time), 0, 0,
 								   0, 0, 1, 0,

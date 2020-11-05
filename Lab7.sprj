@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project version="2">
 	<pipeline>
-		<pass name="CustomProjection" type="shader" active="true">
+		<pass name="CustomProjection" type="shader" active="false">
 			<shader type="vs" path="shaders\ProjectionMatrixVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\ProjectionMatrixFS.glsl" entry="main" />
 			<inputlayout>
@@ -26,69 +26,69 @@
 				<variable type="float4x4" name="mModel" system="GeometryTransform" />
 				<variable type="float4" name="light0.position">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>-5</value>
+						<value>5</value>
+						<value>5</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light0.color">
 					<row>
-						<value>0</value>
+						<value>1</value>
 						<value>0</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float" name="light0.intensity">
 					<row>
-						<value>0</value>
+						<value>10</value>
 					</row>
 				</variable>
 				<variable type="float4" name="light1.position">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>5</value>
+						<value>-5</value>
+						<value>5</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light1.color">
 					<row>
 						<value>0</value>
-						<value>0</value>
+						<value>1</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float" name="light1.intensity">
 					<row>
-						<value>0</value>
+						<value>10</value>
 					</row>
 				</variable>
 				<variable type="float4" name="light2.position">
 					<row>
-						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>5</value>
+						<value>5</value>
+						<value>-5</value>
 						<value>0</value>
 					</row>
 				</variable>
 				<variable type="float3" name="light2.color">
 					<row>
 						<value>0</value>
-						<value>0</value>
-						<value>0</value>
+						<value>1.02715177e-42</value>
+						<value>1</value>
 					</row>
 				</variable>
 				<variable type="float" name="light2.intensity">
 					<row>
-						<value>0</value>
+						<value>10</value>
 					</row>
 				</variable>
 				<variable type="float" name="time" system="Time" />
 			</variables>
 			<macros />
 		</pass>
-		<pass name="CelShaded" type="shader" active="true">
+		<pass name="CelShaded" type="shader" active="false">
 			<shader type="vs" path="shaders\CelShadingVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\CelShadingFS.glsl" entry="main" />
 			<inputlayout>
@@ -173,6 +173,176 @@
 			</variables>
 			<macros />
 		</pass>
+		<pass name="PixelLit-ObjectSpace" type="shader" active="true">
+			<shader type="vs" path="shaders\PixelLit-ObjectSpaceVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\PixelLit-ObjectSpaceFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="Sphere3" type="geometry">
+					<type>Sphere</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float4x4" name="mViewport" system="ViewportSize" />
+				<variable type="float4" name="light0.position">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light0.color">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light0.intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light1.position">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light1.color">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light1.intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light2.position">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light2.color">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light2.intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+			</variables>
+			<macros />
+		</pass>
+		<pass name="VertexLit-ObjectSpace" type="shader" active="true">
+			<shader type="vs" path="shaders\VertexLit-ObjectSpaceVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\VertexLit-ObjectSpaceFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="Sphere4" type="geometry">
+					<type>Sphere</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float4x4" name="mViewport" system="ViewportSize" />
+				<variable type="float4" name="light0.position">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light0.color">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light0.intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light1.position">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light1.color">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light1.intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float4" name="light2.position">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float3" name="light2.color">
+					<row>
+						<value>0</value>
+						<value>0</value>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float" name="light2.intensity">
+					<row>
+						<value>0</value>
+					</row>
+				</variable>
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+			</variables>
+			<macros />
+		</pass>
 	</pipeline>
 	<objects>
 		<object type="texture" path="8081_earthmap10k.jpg" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
@@ -190,10 +360,7 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="file" name="CelShaded" shader="vs" />
-		<entry type="file" name="CelShaded" shader="ps" />
-		<entry type="file" name="CustomProjection" shader="vs" />
-		<entry type="file" name="CustomProjection" shader="ps" />
+		<entry type="property" name="VertexLit-ObjectSpace" item="pipe" />
 		<entry type="pinned" name="light0.position" owner="CustomProjection" />
 		<entry type="pinned" name="light0.color" owner="CustomProjection" />
 		<entry type="pinned" name="light0.intensity" owner="CustomProjection" />
@@ -204,9 +371,9 @@
 		<entry type="pinned" name="light2.color" owner="CustomProjection" />
 		<entry type="pinned" name="light2.intensity" owner="CustomProjection" />
 		<entry type="camera" fp="false">
-			<distance>3</distance>
-			<pitch>-33</pitch>
-			<yaw>206</yaw>
+			<distance>5</distance>
+			<pitch>29</pitch>
+			<yaw>214</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
