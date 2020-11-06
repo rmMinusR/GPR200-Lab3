@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project version="2">
 	<pipeline>
-		<pass name="CustomProjection" type="shader" active="false">
+		<pass name="CustomProjection" type="shader" active="true">
 			<shader type="vs" path="shaders\ProjectionMatrixVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\ProjectionMatrixFS.glsl" entry="main" />
 			<inputlayout>
@@ -88,7 +88,7 @@
 			</variables>
 			<macros />
 		</pass>
-		<pass name="CelShaded" type="shader" active="true">
+		<pass name="CelShaded" type="shader" active="false">
 			<shader type="vs" path="shaders\CelShadingVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\CelShadingFS.glsl" entry="main" />
 			<inputlayout>
@@ -366,11 +366,11 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="PixelLit-ObjectSpace" item="pipe" />
-		<entry type="file" name="CelShaded" shader="vs" />
-		<entry type="file" name="CelShaded" shader="ps" />
-		<entry type="file" name="PixelLit-ObjectSpace" shader="vs" />
-		<entry type="file" name="PixelLit-ObjectSpace" shader="ps" />
+		<entry type="property" name="VertexLit-ObjectSpace" item="pipe" />
+		<entry type="file" name="CustomProjection" shader="vs" />
+		<entry type="file" name="CustomProjection" shader="ps" />
+		<entry type="file" name="VertexLit-ObjectSpace" shader="vs" />
+		<entry type="file" name="VertexLit-ObjectSpace" shader="ps" />
 		<entry type="pinned" name="light0.position" owner="CustomProjection" />
 		<entry type="pinned" name="light0.color" owner="CustomProjection" />
 		<entry type="pinned" name="light0.intensity" owner="CustomProjection" />

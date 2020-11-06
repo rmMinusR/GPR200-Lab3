@@ -16,6 +16,7 @@ in vec2 vecUv;
 out vec4 fragColor;
 
 void main() {
+	// calculation of the final color as the sum of each of the components
 	vec3 diffuse_color = texture(texDiff, vecUv).rgb;
 	vec3 spec_color = texture(texSpec, vecUv).rgb;
 	fragColor = vec4(vec3(0) + ((diffuseIntensity * diffuse_color) + (specIntensity * spec_color)), 1);
