@@ -366,11 +366,9 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="VertexLit-ObjectSpace" item="pipe" />
+		<entry type="property" name="CustomProjection" item="pipe" />
 		<entry type="file" name="CustomProjection" shader="vs" />
 		<entry type="file" name="CustomProjection" shader="ps" />
-		<entry type="file" name="VertexLit-ObjectSpace" shader="vs" />
-		<entry type="file" name="VertexLit-ObjectSpace" shader="ps" />
 		<entry type="pinned" name="light0.position" owner="CustomProjection" />
 		<entry type="pinned" name="light0.color" owner="CustomProjection" />
 		<entry type="pinned" name="light0.intensity" owner="CustomProjection" />
@@ -382,8 +380,8 @@
 		<entry type="pinned" name="light2.intensity" owner="CustomProjection" />
 		<entry type="camera" fp="false">
 			<distance>4</distance>
-			<pitch>4</pitch>
-			<yaw>229</yaw>
+			<pitch>-18</pitch>
+			<yaw>288</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
