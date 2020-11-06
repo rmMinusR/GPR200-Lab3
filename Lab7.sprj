@@ -88,7 +88,7 @@
 			</variables>
 			<macros />
 		</pass>
-		<pass name="CelShaded" type="shader" active="false">
+		<pass name="CelShaded" type="shader" active="true">
 			<shader type="vs" path="shaders\CelShadingVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\CelShadingFS.glsl" entry="main" />
 			<inputlayout>
@@ -367,6 +367,10 @@
 	<cameras />
 	<settings>
 		<entry type="property" name="PixelLit-ObjectSpace" item="pipe" />
+		<entry type="file" name="CelShaded" shader="vs" />
+		<entry type="file" name="CelShaded" shader="ps" />
+		<entry type="file" name="PixelLit-ObjectSpace" shader="vs" />
+		<entry type="file" name="PixelLit-ObjectSpace" shader="ps" />
 		<entry type="pinned" name="light0.position" owner="CustomProjection" />
 		<entry type="pinned" name="light0.color" owner="CustomProjection" />
 		<entry type="pinned" name="light0.intensity" owner="CustomProjection" />
@@ -377,9 +381,9 @@
 		<entry type="pinned" name="light2.color" owner="CustomProjection" />
 		<entry type="pinned" name="light2.intensity" owner="CustomProjection" />
 		<entry type="camera" fp="false">
-			<distance>5</distance>
-			<pitch>13</pitch>
-			<yaw>263</yaw>
+			<distance>4</distance>
+			<pitch>4</pitch>
+			<yaw>229</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
