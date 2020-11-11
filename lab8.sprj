@@ -118,15 +118,16 @@
 		<object type="rendertexture" name="brightpass" rsize="1.000000,1.000000" clear="true">
 			<bind slot="0" name="BlurHorizontal" />
 		</object>
-		<object type="rendertexture" name="blur_half" fsize="677,725" clear="true">
+		<object type="rendertexture" name="blur_half" rsize="1.000000,1.000000" clear="true">
 			<bind slot="0" name="BlurVertical" />
 		</object>
-		<object type="rendertexture" name="blur_full" fsize="677,725" clear="true">
+		<object type="rendertexture" name="blur_full" rsize="1.000000,1.000000" clear="true">
 			<bind slot="0" name="Composite" />
 		</object>
 	</objects>
 	<cameras />
 	<settings>
+		<entry type="property" name="blur_full" item="rt" />
 		<entry type="file" name="BlurHorizontal" shader="ps" />
 		<entry type="file" name="BlurHorizontal" shader="vs" />
 		<entry type="file" name="Composite" shader="vs" />
