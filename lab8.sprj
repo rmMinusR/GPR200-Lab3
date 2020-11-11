@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<project version="2">
+	<pipeline>
+		<pass name="0-SceneInput" type="shader" active="true">
+			<shader type="vs" path="shaders\0-SceneInputVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\0-SceneInputFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+			</inputlayout>
+			<rendertexture name="original_scene" />
+			<items>
+				<item name="RenderSphere" type="geometry">
+					<type>Sphere</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+				<variable type="float4x4" name="mView" system="View" />
+				<variable type="float4x4" name="mProj" system="Projection" />
+			</variables>
+			<macros />
+		</pass>
+		<pass name="1-BrightPass" type="shader" active="true">
+			<shader type="vs" path="shaders\1-BrightPassVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\1-BrightPassFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture name="brightpass" />
+			<items>
+				<item name="BrightPassScreenQuad" type="geometry">
+					<type>ScreenQuadNDC</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<macros />
+		</pass>
+		<pass name="BlurHorizontal" type="shader" active="true">
+			<shader type="vs" path="shaders\BlurHorizontalVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\BlurHorizontalFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture name="blur_half" />
+			<items>
+				<item name="BlurHorizontalScreenQuad" type="geometry">
+					<type>ScreenQuadNDC</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<macros />
+		</pass>
+		<pass name="BlurVertical" type="shader" active="true">
+			<shader type="vs" path="shaders\BlurVerticalVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\BlurVerticalFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture name="blur_full" />
+			<items>
+				<item name="BlurVerticalScreenQuad" type="geometry">
+					<type>ScreenQuadNDC</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<macros />
+		</pass>
+		<pass name="Composite" type="shader" active="true">
+			<shader type="vs" path="shaders\CompositeVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\CompositeFS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="CompositeScreenQuad" type="geometry">
+					<type>ScreenQuadNDC</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<macros />
+		</pass>
+	</pipeline>
+	<objects>
+		<object type="rendertexture" name="original_scene" rsize="1.000000,1.000000" clear="true">
+			<bind slot="0" name="1-BrightPass" />
+		</object>
+		<object type="rendertexture" name="brightpass" rsize="1.000000,1.000000" clear="true">
+			<bind slot="0" name="BlurHorizontal" />
+		</object>
+		<object type="rendertexture" name="blur_half" fsize="677,725" clear="true">
+			<bind slot="0" name="BlurVertical" />
+		</object>
+		<object type="rendertexture" name="blur_full" fsize="677,725" clear="true">
+			<bind slot="0" name="Composite" />
+		</object>
+	</objects>
+	<cameras />
+	<settings>
+		<entry type="file" name="BlurHorizontal" shader="ps" />
+		<entry type="file" name="BlurHorizontal" shader="vs" />
+		<entry type="file" name="Composite" shader="vs" />
+		<entry type="file" name="Composite" shader="ps" />
+		<entry type="file" name="BlurVertical" shader="vs" />
+		<entry type="file" name="BlurVertical" shader="ps" />
+		<entry type="camera" fp="false">
+			<distance>5</distance>
+			<pitch>34</pitch>
+			<yaw>259</yaw>
+			<roll>360</roll>
+		</entry>
+		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
+		<entry type="usealpha" val="false" />
+		<entry type="ipaths">
+			<path>.</path>
+		</entry>
+	</settings>
+	<plugindata />
+</project>
