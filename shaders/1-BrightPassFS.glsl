@@ -8,5 +8,6 @@ in vec2 screenPosNDC;
 out vec4 fragColor;
 
 void main() {
-	fragColor = texture(brightPassInput, screenPosUV);
+	vec4 colorIn = texture(brightPassInput, screenPosUV);
+	fragColor = colorIn * colorIn * colorIn * colorIn * colorIn;
 }
