@@ -1,32 +1,7 @@
 <?xml version="1.0"?>
 <project version="2">
 	<pipeline>
-		<pass name="0-SceneInput" type="shader" active="true">
-			<shader type="vs" path="shaders\0-SceneInputVS.glsl" entry="main" />
-			<shader type="ps" path="shaders\0-SceneInputFS.glsl" entry="main" />
-			<inputlayout>
-				<item value="Position" semantic="POSITION" />
-				<item value="Normal" semantic="NORMAL" />
-			</inputlayout>
-			<rendertexture name="original_scene" />
-			<items>
-				<item name="RenderSphere" type="geometry">
-					<type>Sphere</type>
-					<width>1</width>
-					<height>1</height>
-					<depth>1</depth>
-					<topology>TriangleList</topology>
-				</item>
-			</items>
-			<itemvalues />
-			<variables>
-				<variable type="float4x4" name="mModel" system="GeometryTransform" />
-				<variable type="float4x4" name="mView" system="View" />
-				<variable type="float4x4" name="mProj" system="Projection" />
-			</variables>
-			<macros />
-		</pass>
-		<pass name="1-BrightPass" type="shader" active="true">
+		<pass name="BrightPass" type="shader" active="true">
 			<shader type="vs" path="shaders\1-BrightPassVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\1-BrightPassFS.glsl" entry="main" />
 			<inputlayout>
@@ -112,9 +87,6 @@
 		</pass>
 	</pipeline>
 	<objects>
-		<object type="rendertexture" name="original_scene" rsize="1.000000,1.000000" clear="true">
-			<bind slot="0" name="1-BrightPass" />
-		</object>
 		<object type="rendertexture" name="brightpass" rsize="1.000000,1.000000" clear="true">
 			<bind slot="0" name="BlurHorizontal" />
 		</object>
@@ -122,22 +94,24 @@
 			<bind slot="0" name="BlurVertical" />
 		</object>
 		<object type="rendertexture" name="blur_full" rsize="1.000000,1.000000" clear="true">
+			<bind slot="1" name="Composite" />
+		</object>
+		<object type="texture" path="resources\TF2.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
+			<bind slot="0" name="BrightPass" />
 			<bind slot="0" name="Composite" />
 		</object>
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="blur_full" item="rt" />
-		<entry type="file" name="BlurHorizontal" shader="ps" />
-		<entry type="file" name="BlurHorizontal" shader="vs" />
+		<entry type="property" name="Composite" item="pipe" />
 		<entry type="file" name="Composite" shader="vs" />
 		<entry type="file" name="Composite" shader="ps" />
-		<entry type="file" name="BlurVertical" shader="vs" />
 		<entry type="file" name="BlurVertical" shader="ps" />
+		<entry type="file" name="BlurHorizontal" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>5</distance>
-			<pitch>34</pitch>
-			<yaw>259</yaw>
+			<distance>8</distance>
+			<pitch>9</pitch>
+			<yaw>53</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
