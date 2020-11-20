@@ -3,11 +3,16 @@
 uniform sampler2D brightPassInput;
 
 in vec2 screenPosUV;
-in vec2 screenPosNDC;
 
 out vec4 fragColor;
 
 void main() {
+	//Sample source texture
 	vec4 colorIn = texture(brightPassInput, screenPosUV);
-	fragColor = colorIn * colorIn * colorIn * colorIn * colorIn;
+	
+	//Perform bright pass
+	vec4 colorInPow4 = colorIn * colorIn;
+	colorInPow4 *= colorInPow4;
+	
+	fragColor = colorInPow4 * colorIn; //Equivalent to pow(colorIn, 5) but faster
 }

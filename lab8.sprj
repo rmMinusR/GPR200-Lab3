@@ -6,7 +6,6 @@
 			<shader type="ps" path="shaders\1-BrightPassFS.glsl" entry="main" />
 			<inputlayout>
 				<item value="Position" semantic="POSITION" />
-				<item value="Normal" semantic="NORMAL" />
 				<item value="Texcoord" semantic="TEXCOORD0" />
 			</inputlayout>
 			<rendertexture name="brightpass" />
@@ -26,8 +25,7 @@
 			<shader type="vs" path="shaders\BlurHorizontalVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\BlurHorizontalFS.glsl" entry="main" />
 			<inputlayout>
-				<item value="Position" semantic="POSITION" />
-				<item value="Normal" semantic="NORMAL" />
+				<item value="Position" />
 				<item value="Texcoord" semantic="TEXCOORD0" />
 			</inputlayout>
 			<rendertexture name="blur_half" />
@@ -48,7 +46,6 @@
 			<shader type="ps" path="shaders\BlurVerticalFS.glsl" entry="main" />
 			<inputlayout>
 				<item value="Position" semantic="POSITION" />
-				<item value="Normal" semantic="NORMAL" />
 				<item value="Texcoord" semantic="TEXCOORD0" />
 			</inputlayout>
 			<rendertexture name="blur_full" />
@@ -69,7 +66,6 @@
 			<shader type="ps" path="shaders\CompositeFS.glsl" entry="main" />
 			<inputlayout>
 				<item value="Position" semantic="POSITION" />
-				<item value="Normal" semantic="NORMAL" />
 				<item value="Texcoord" semantic="TEXCOORD0" />
 			</inputlayout>
 			<rendertexture />
@@ -103,11 +99,11 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="Composite" item="pipe" />
-		<entry type="file" name="Composite" shader="vs" />
-		<entry type="file" name="Composite" shader="ps" />
-		<entry type="file" name="BlurVertical" shader="ps" />
+		<entry type="property" name="BrightPass" item="pipe" />
 		<entry type="file" name="BlurHorizontal" shader="ps" />
+		<entry type="file" name="BlurVertical" shader="ps" />
+		<entry type="file" name="BrightPass" shader="vs" />
+		<entry type="file" name="BrightPass" shader="ps" />
 		<entry type="camera" fp="false">
 			<distance>8</distance>
 			<pitch>9</pitch>
