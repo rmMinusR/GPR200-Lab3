@@ -1,3 +1,11 @@
+/*
+
+Compositing step
+
+Written by Sean Sawyers-Abbott and Robert Christensen
+
+*/
+
 #version 330
 
 uniform sampler2D tOriginal;

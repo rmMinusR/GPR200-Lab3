@@ -1,3 +1,11 @@
+/*
+
+Blur algorithm
+
+Written by Sean Sawyers-Abbott and Robert Christensen
+
+*/
+
 //Blur kernel is the 26th row of Pascal's Triangle
 const int KERN_SIZE = 26;
 const float[KERN_SIZE] blurKernel = float[KERN_SIZE](1, 25, 300, 2300, 12650, 53130, 177100, 480700, 1081575, 2042975, 3268760, 4457400, 5200300, 5200300, 4457400, 3268760, 2042975, 1081575, 480700, 177100, 53130, 12650, 2300, 300, 25, 1);
@@ -17,7 +25,7 @@ vec4 applyKernel(vec2 current_pos, float[KERN_SIZE] kernel, vec2 direction) {
 		
 		//Do weighted average things
 		sum += texture(blurInput, sample_pos).rgb * w; // Take advantage of texture blending hardware, plus allow non-integer directions
-		weight += abs(w);
+		weight += abs(w); //Necessary if there are any negative weights
 	}
 	
 	return vec4(sum/weight, 1);
