@@ -14,7 +14,7 @@ out Vertex {
 } vertex;
 
 void main() {
-	gl_Position = mModel * vec4(local_pos.xyz, 1);
+	gl_Position = mModel * vec4(local_pos.xyz, 1); //Transformation to clipspace done in GS
 	vertex.color = vec4(1);
-	vertex.size = 0.07;
+	vertex.size = 0.07; //Dummy value for testing
 }

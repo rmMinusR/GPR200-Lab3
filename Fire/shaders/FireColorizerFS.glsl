@@ -10,8 +10,7 @@ in vec2 uv;
 
 out vec4 fragColor;
 
-void main() {
-	vec4 s = texture(values, uv);
-	fragColor = texture(colorRamp, vec2(pow(s.r/range, curving), 0));
-	gl_FragDepth = s.g;
+void main() { //Fire texture to color using colorRamp texture
+	float temp = texture(values, uv).r;
+	fragColor = texture(colorRamp, vec2(pow(temp/range, curving), 0));
 }

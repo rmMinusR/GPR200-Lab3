@@ -17,10 +17,13 @@ out vec2 uv;
 out vec4 color;
 
 void main() {
+	//Camera-relative right and up vectors
 	vec4 right = vec4(mView[0][0], mView[1][0], mView[2][0], 0) * vertex[0].size;
 	vec4 up    = vec4(mView[0][1], mView[1][1], mView[2][1], 0) * vertex[0].size;
 	
 	vec4 particle_pos = gl_in[0].gl_Position;
+	
+	//Point to screen-facing square quad
 	
 	gl_Position = mViewProj * (particle_pos - right + up);
 	color = vertex[0].color;

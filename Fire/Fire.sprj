@@ -1,6 +1,52 @@
 <?xml version="1.0"?>
 <project version="2">
 	<pipeline>
+		<pass name="ParticleSystemTests" type="shader" active="false" collapsed="true">
+			<shader type="vs" path="shaders\ParticleSystemVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\ParticleSystemFS.glsl" entry="main" />
+			<shader used="true" type="gs" path="shaders\ParticleSystemGS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="StanfordBunny" type="vertexbuffer">
+					<buffer>stanford-bunny</buffer>
+					<scaleX>32</scaleX>
+					<scaleY>32</scaleY>
+					<scaleZ>32</scaleZ>
+					<x>3.02417469</x>
+					<y>-3.08358288</y>
+					<z>2.62571526</z>
+					<topology>PointList</topology>
+				</item>
+				<item name="Suzanne" type="vertexbuffer">
+					<buffer>suzanne</buffer>
+					<x>-0.631501555</x>
+					<y>-2.43118429</y>
+					<z>-2.31294918</z>
+					<topology>PointList</topology>
+				</item>
+				<item name="Teapot" type="vertexbuffer">
+					<buffer>teapot</buffer>
+					<x>0.110100746</x>
+					<y>-2.42242932</y>
+					<z>-3.22541714</z>
+					<topology>PointList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float4x4" name="mView" system="View" />
+				<variable type="float4x4" name="mViewProj" system="ViewProjection" />
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+				<variable type="float" name="time" system="Time" />
+				<variable type="float2" name="viewportDims" system="ViewportSize" />
+			</variables>
+			<macros />
+		</pass>
 		<pass name="FireMeshGenerator" type="compute" active="true">
 			<shader type="cs" path="shaders\FireMeshGeneratorCS.glsl" entry="main" />
 			<groupsize x="1536" y="1" z="1" />
@@ -64,52 +110,6 @@
 						<value>200</value>
 					</row>
 				</variable>
-			</variables>
-			<macros />
-		</pass>
-		<pass name="ParticleSystem" type="shader" active="false">
-			<shader type="vs" path="shaders\ParticleSystemVS.glsl" entry="main" />
-			<shader type="ps" path="shaders\ParticleSystemFS.glsl" entry="main" />
-			<shader used="true" type="gs" path="shaders\ParticleSystemGS.glsl" entry="main" />
-			<inputlayout>
-				<item value="Position" semantic="POSITION" />
-				<item value="Normal" semantic="NORMAL" />
-				<item value="Texcoord" semantic="TEXCOORD0" />
-			</inputlayout>
-			<rendertexture />
-			<items>
-				<item name="StanfordBunny" type="vertexbuffer">
-					<buffer>stanford-bunny</buffer>
-					<scaleX>32</scaleX>
-					<scaleY>32</scaleY>
-					<scaleZ>32</scaleZ>
-					<x>3.02417469</x>
-					<y>-3.08358288</y>
-					<z>2.62571526</z>
-					<topology>PointList</topology>
-				</item>
-				<item name="Suzanne" type="vertexbuffer">
-					<buffer>suzanne</buffer>
-					<x>-0.631501555</x>
-					<y>-2.43118429</y>
-					<z>-2.31294918</z>
-					<topology>PointList</topology>
-				</item>
-				<item name="Teapot" type="vertexbuffer">
-					<buffer>teapot</buffer>
-					<x>0.110100746</x>
-					<y>-2.42242932</y>
-					<z>-3.22541714</z>
-					<topology>PointList</topology>
-				</item>
-			</items>
-			<itemvalues />
-			<variables>
-				<variable type="float4x4" name="mView" system="View" />
-				<variable type="float4x4" name="mViewProj" system="ViewProjection" />
-				<variable type="float4x4" name="mModel" system="GeometryTransform" />
-				<variable type="float" name="time" system="Time" />
-				<variable type="float2" name="viewportDims" system="ViewportSize" />
 			</variables>
 			<macros />
 		</pass>
@@ -195,10 +195,6 @@
 				</item>
 			</items>
 			<itemvalues />
-			<variables>
-				<variable type="float4x4" name="mModel" system="GeometryTransform" />
-				<variable type="float4x4" name="mViewProj" system="ViewProjection" />
-			</variables>
 			<macros />
 		</pass>
 		<pass name="FireColorizer" type="shader" active="true">
@@ -270,8 +266,6 @@
 		<object type="buffer" name="stanford-bunny" size="3333648" format="vec4" pausedpreview="false" />
 		<object type="buffer" name="suzanne" size="31488" format="vec4" pausedpreview="false" />
 		<object type="buffer" name="teapot" size="303360" format="vec4" pausedpreview="false" />
-		<object type="texture" path="..\..\Programs\SHADERed\icon_256x256.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
-		<object type="texture" path="..\..\Programs\SHADERed\icon_32x32.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
 		<object type="buffer" name="firemesh" size="65536" format="vec3; float; vec3; float" pausedpreview="false">
 			<bind slot="0" name="FireMeshGenerator" />
 		</object>
@@ -284,7 +278,7 @@
 			<bind slot="0" name="FireParticlesToTemperature" />
 		</object>
 		<object type="texture" path="textures\hardness-50.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
-			<bind slot="0" name="ParticleSystem" />
+			<bind slot="0" name="ParticleSystemTests" />
 		</object>
 		<object type="texture" path="textures\hardness-75.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
 		<object type="texture" path="textures\hardness-100.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
@@ -298,6 +292,13 @@
 	</objects>
 	<cameras />
 	<settings>
+		<entry type="property" name="FireParticlesToTemperature" item="pipe" />
+		<entry type="file" name="ParticleSystemTests" shader="vs" />
+		<entry type="file" name="ParticleSystemTests" shader="ps" />
+		<entry type="file" name="ParticleSystemTests" shader="gs" />
+		<entry type="file" name="FireParticlesToTemperature" shader="vs" />
+		<entry type="file" name="FireParticlesToTemperature" shader="ps" />
+		<entry type="file" name="FireParticlesToTemperature" shader="gs" />
 		<entry type="pinned" name="lift" owner="FireMeshGenerator" />
 		<entry type="pinned" name="drag" owner="FireMeshGenerator" />
 		<entry type="pinned" name="speed" owner="FireMeshGenerator" />
@@ -313,9 +314,9 @@
 		<entry type="pinned" name="curving" owner="FireColorizer" />
 		<entry type="pinned" name="updraftCohesion" owner="FireMeshGenerator" />
 		<entry type="camera" fp="false">
-			<distance>22</distance>
-			<pitch>17</pitch>
-			<yaw>141</yaw>
+			<distance>17</distance>
+			<pitch>2</pitch>
+			<yaw>311</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="9.99992039e-07" g="9.99989993e-07" b="9.99999997e-07" a="0" />

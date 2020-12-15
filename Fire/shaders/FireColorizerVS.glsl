@@ -7,6 +7,6 @@ layout (location = 1) in vec2 _uv;
 out vec2 uv;
 
 void main() {
-	gl_Position = pos;
+	gl_Position = pos; //ScreenQuad; no transformation needed
 	uv = _uv;
 }

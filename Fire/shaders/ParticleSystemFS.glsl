@@ -13,9 +13,14 @@ out vec4 fragColor;
 #include "common/dither.glsl"
 
 void main() {
+	//Draw textured particle, using dithering to simulate alpha
+	
 	ivec2 viewportPixelCoord = ivec2(gl_FragCoord.xy);
 	vec4 sampled = texture(particleTexture, uv);
+	
+	//Dithering effect
 	if(sampled.a > dither(viewportPixelCoord)) fragColor = sampled * color;
 	else discard;
-	fragColor.rg *= uv;
+	
+	fragColor.rg *= uv; //Testing purposes only
 }
