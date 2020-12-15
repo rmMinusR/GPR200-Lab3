@@ -10,7 +10,7 @@ uniform vec2 vpSize;
 in vec4 global_pos;
 out vec4 depth;
 
-//This function is Sebastian Lague's work, adapted from HLSL to GLSL.
+//This function is Sebastian Lague's work, ported/adapted from HLSL to GLSL.
 // Returns (dstToBox, dstInsideBox). If ray misses box, dstInsideBox will be zero
 vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDirection) {
 	//Cube = 6 planes

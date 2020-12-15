@@ -68,6 +68,7 @@
 			<rendertexture name="depth" />
 			<items>
 				<item name="VolumeMaskerRS" type="renderstate">
+					<cull>false</cull>
 					<blend>true</blend>
 					<alpha2coverage>false</alpha2coverage>
 					<colorsrcfactor>One</colorsrcfactor>
@@ -102,9 +103,9 @@
 					<width>1</width>
 					<height>1</height>
 					<depth>1</depth>
-					<x>0.5</x>
-					<y>0.5</y>
-					<z>0.5</z>
+					<scaleX>8</scaleX>
+					<scaleY>8</scaleY>
+					<scaleZ>8</scaleZ>
 					<topology>TriangleList</topology>
 				</item>
 			</items>
@@ -139,6 +140,8 @@
 			<variables>
 				<variable type="float2" name="vpSize" system="ViewportSize" />
 				<variable type="float4x4" name="mViewInv" invert="true" system="View" />
+				<variable type="float4x4" name="mModelInv" invert="true" system="GeometryTransform" />
+				<variable type="float4x4" name="mViewProjInv" invert="true" system="ViewProjection" />
 			</variables>
 			<macros />
 		</pass>
@@ -154,15 +157,22 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="Simple" item="pipe" />
+		<entry type="property" name="VolumeContainer" item="pipe" />
+		<entry type="file" name="VolumeRenderer" shader="vs" />
+		<entry type="file" name="VolumeRenderer" shader="ps" />
+		<entry type="file" name="VolumeMasker" shader="vs" />
+		<entry type="file" name="VolumeMasker" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>3</distance>
-			<pitch>30</pitch>
-			<yaw>233</yaw>
+			<distance>14</distance>
+			<pitch>22</pitch>
+			<yaw>68</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
 		<entry type="usealpha" val="false" />
+		<entry type="ipaths">
+			<path>.</path>
+		</entry>
 	</settings>
 	<plugindata />
 </project>
