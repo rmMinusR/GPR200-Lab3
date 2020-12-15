@@ -13,6 +13,9 @@ out vec4 depth;
 //This function is Sebastian Lague's work, adapted from HLSL to GLSL.
 // Returns (dstToBox, dstInsideBox). If ray misses box, dstInsideBox will be zero
 vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDirection) {
+	//Cube = 6 planes
+	//q = o + t*d
+	//(q-o)/d = t
 	vec3 invRaydir = 1/rayDirection;
     // Adapted from: http://jcgt.org/published/0007/03/04/
     vec3 t0 = (boundsMin - rayOrigin) * invRaydir;
@@ -36,16 +39,6 @@ vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDirection
     return vec2(dstToBox, dstInsideBox);
 }
 
-vec2 rayBoxDst2(vec3 boundsA, vec3 boundsB, vec3 rayOrigin, vec3 rayDirection) {
-	//Cube = 6 planes
-	//q = o + t*d
-	//(q-o)/d = t
-	vec3 t0 = (boundsA-rayOrigin) / rayDirection;
-	vec3 t1 = (boundsB-rayOrigin) / rayDirection;
-	
-	return vec2(0);
-}
-
 struct ray_t {
 	vec4 origin;
 	vec4 direction;
@@ -55,13 +48,15 @@ void main() {
 	vec3 scale = vec3( mModel[0].x, mModel[1].y, mModel[2].z );
 	
 	ray_t viewray; //Global space viewing ray
-	viewray.origin = inverse(mView) * vec4(0,0,0,1);//vec4(-mViewProj[0].w, -mViewProj[1].w, -mViewProj[2].w, 1);
+	viewray.origin = inverse(mView) * vec4(0,0,0,1);
 	viewray.direction = vec4(normalize(global_pos.xyz-viewray.origin.xyz), 0);
 	
 	vec3 v = vec3(0.5);
-	vec2 dists = rayBoxDst((mModel*vec4(-v,1)).xyz, (mModel*vec4(v,1)).xyz, viewray.origin.xyz, viewray.direction.xyz);
-	//depth.rgb = viewray.direction.xyz;
-	depth.g = dists.x;
-	depth.b = dists.y;
-	//depth.g = global_pos.z;
+	vec2 tmp = rayBoxDst((mModel*vec4(-v,1)).xyz, (mModel*vec4(v,1)).xyz, viewray.origin.xyz, viewray.direction.xyz);
+	
+	//Entry distance
+	depth.g = tmp.x;
+	
+	//Exit distance
+	depth.b = tmp.x+tmp.y;
 }

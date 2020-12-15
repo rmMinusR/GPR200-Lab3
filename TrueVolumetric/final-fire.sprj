@@ -69,11 +69,11 @@
 			<rendertexture name="depth" />
 			<items>
 				<item name="CloudsMaskerRS" type="renderstate">
-					<blend>false</blend>
+					<blend>true</blend>
 					<alpha2coverage>false</alpha2coverage>
-					<colorsrcfactor>Source Alpha</colorsrcfactor>
-					<colordstfactor>Inverse Source Alpha</colordstfactor>
-					<colorfunc>Add</colorfunc>
+					<colorsrcfactor>One</colorsrcfactor>
+					<colordstfactor>One</colordstfactor>
+					<colorfunc>Max</colorfunc>
 					<alphasrcfactor>Source Alpha</alphasrcfactor>
 					<alphadstfactor>Inverse Source Alpha</alphadstfactor>
 					<alphafunc>Add</alphafunc>
@@ -103,9 +103,9 @@
 					<width>1</width>
 					<height>1</height>
 					<depth>1</depth>
-					<x>0.49928847</x>
-					<y>0.349919319</y>
-					<z>0.474575758</z>
+					<x>0.5</x>
+					<y>0.5</y>
+					<z>0.5</z>
 					<topology>TriangleList</topology>
 				</item>
 			</items>
@@ -144,7 +144,7 @@
 		</pass>
 	</pipeline>
 	<objects>
-		<object type="rendertexture" name="depth" format="R32G32B32_FLOAT" rsize="1.000000,1.000000" clear="true" r="9.99999997e-07" g="9.99989993e-07" b="9.99989993e-07">
+		<object type="rendertexture" name="depth" format="R32G32B32_FLOAT" rsize="1.000000,1.000000" clear="true" r="257.003937">
 			<bind slot="0" name="Simple" />
 			<bind slot="1" name="CloudsCompositor" />
 		</object>
@@ -154,15 +154,15 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="CloudsContainer" item="pipe" />
-		<entry type="file" name="CloudsMasker" shader="vs" />
-		<entry type="file" name="CloudsMasker" shader="ps" />
+		<entry type="property" name="depth" item="rt" />
 		<entry type="file" name="CloudsCompositor" shader="vs" />
 		<entry type="file" name="CloudsCompositor" shader="ps" />
+		<entry type="file" name="CloudsMasker" shader="vs" />
+		<entry type="file" name="CloudsMasker" shader="ps" />
 		<entry type="camera" fp="false">
 			<distance>3</distance>
-			<pitch>20</pitch>
-			<yaw>227</yaw>
+			<pitch>30</pitch>
+			<yaw>201</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
