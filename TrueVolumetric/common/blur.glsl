@@ -1,5 +1,5 @@
-//#ifndef HG_BLUR
-//#define HG_BLUR
+#ifndef HG_BLUR
+#define HG_BLUR
 
 /*
 
@@ -30,4 +30,4 @@ vec4 applyKernel(in vec2 current_pos, in float[KERN_SIZE] kernel, in vec2 direct
 	return vec4(sum/weight, 1);
 }
 
-//#endif
+#endif

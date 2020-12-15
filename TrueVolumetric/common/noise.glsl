@@ -30,6 +30,7 @@ vec3 fibonacci_offset(in int n) {
     );
 }
 
+/*
 //It loops. Gross!
 //Also it's artifact-prone. Oh well.
 float fractalNoise(in vec3 pos, in int octaves, in float octaveScaling, in float octaveWeight, in int seed) {
@@ -37,10 +38,31 @@ float fractalNoise(in vec3 pos, in int octaves, in float octaveScaling, in float
     float octavicSum = 0.;
     
     for(int i = 0; i < octaves; i++) {
-        //f += aaNoise( pow(octaveScaling, float(i))*pos ) * pow(octaveWeight, float(octaves-i+1)) * (1.-octaveWeight);
-        float layer = aaNoise( pow(octaveScaling, float(i))*pos + fibonacci_offset(i), seed);
-        f +=  layer * pow(octaveWeight, float(i));
-        octavicSum += pow(octaveWeight, float(i));
+        float layer = aaNoise( ipow(octaveScaling, i)*pos + fibonacci_offset(i), seed);
+        f +=  layer * ipow(octaveWeight, i);
+        octavicSum += ipow(octaveWeight, i);
+    }
+    
+    return f/octavicSum;
+}
+*/
+
+//It loops. Gross!
+//Also it's artifact-prone. Oh well.
+float fractalNoise(in vec3 pos, in int octaves, in float octaveScaling, in float octaveWeight, in int seed) {
+    float f = 0.;
+    float octavicSum = 0.;
+    
+    float _ow = 1, _os = 1;
+    vec3 fib = vec3(1, 1, 2);
+    for(int i = 0; i < octaves; i++) {
+        float layer = aaNoise( _os*pos + vec3((i&1)!=0?-fib.x:fib.x, (i&2)!=0?-fib.y:fib.y, (i&4)!=0?-fib.z:fib.z), seed);
+        f +=  layer * _ow;
+        octavicSum += _ow;
+        
+        _ow *= octaveWeight;
+        _os *= octaveScaling;
+        fib.xy = fib.yz; fib.z = fib.x+fib.y;
     }
     
     return f/octavicSum;
