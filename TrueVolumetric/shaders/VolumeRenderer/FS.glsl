@@ -56,11 +56,13 @@ ray_t glup_primary_ray() {
 // BEGIN RAYMARCHER
 
 float density(in vec3 pos) {
-	return bellcurve(0, 1, 4, pos, 983726458);
+	return bellcurve(0, 1, 8, pos, 983723);
 }
 
 void volsample(in vec4 pos, out vec4 diffuse, out vec4 emission) {
-	diffuse = vec4(1,1,1,max(density(pos.xyz*8), 0));
+	diffuse.rgb = vec3(1);
+	//diffuse.rgb = vec3(bellcurve(0.8, 0.2, 6, pos.xyz, 83742));
+	diffuse.a = max(density(pos.xyz*8), 0);
 	emission = vec4(0);
 }
 
@@ -73,6 +75,8 @@ vec4 volmarch(ray_t ray, vec4 back, float entry, float exit) {
 	for(float t = entry; t <= exit && steps++ < MAX_STEPS; t += T_STEP) {
 		vec4 diffuse, emission;
 		volsample(ray_at(ray, t), diffuse, emission);
+		//Contrast booster. Not recommended bc performance
+		//diffuse.a = 1-pow(1-diffuse.a, T_STEP);
 		diffuse.a *= T_STEP;
 		
 		outVal = alpha_mix(diffuse, outVal) + vec4(emission.rgb*emission.a, 0);

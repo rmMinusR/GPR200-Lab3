@@ -157,15 +157,13 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="VolumeMaskerRS" item="pipe" />
+		<entry type="property" name="VolumeRenderer" item="pipe" />
 		<entry type="file" name="VolumeRenderer" shader="vs" />
 		<entry type="file" name="VolumeRenderer" shader="ps" />
-		<entry type="file" name="VolumeMasker" shader="vs" />
-		<entry type="file" name="VolumeMasker" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>3</distance>
-			<pitch>35</pitch>
-			<yaw>94</yaw>
+			<distance>16</distance>
+			<pitch>22</pitch>
+			<yaw>41</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
