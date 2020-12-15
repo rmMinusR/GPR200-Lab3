@@ -2,7 +2,6 @@
 
 uniform sampler2D nonClouds;
 uniform sampler2D depths;
-uniform sampler2D cachedHits;
 
 uniform vec2 vpSize;
 uniform mat4 mViewInv;
@@ -12,6 +11,9 @@ out vec4 finalFragColor;
 uniform mat4 mViewProjInv;
 uniform mat4 mModelInv;
 
+uniform float time;
+
+//Helper func for volmarch
 vec4 alpha_mix(vec4 cfront, vec4 cback) { return vec4(cfront.rgb*cfront.a+cback.rgb*(1-cfront.a), 1-(1-cfront.a)*(1-cback.a)); }
 
 //IMPORTS
@@ -56,18 +58,18 @@ ray_t glup_primary_ray() {
 // BEGIN RAYMARCHER
 
 float density(in vec3 pos) {
-	return bellcurve(0, 1, 8, pos, 983723);
+	return bellcurve(0, 1, 8, pos*8+vec3(time*8,0,0), 983723);
 }
 
 void volsample(in vec4 pos, out vec4 diffuse, out vec4 emission) {
 	diffuse.rgb = vec3(1);
 	//diffuse.rgb = vec3(bellcurve(0.8, 0.2, 6, pos.xyz, 83742));
-	diffuse.a = max(density(pos.xyz*8), 0);
+	diffuse.a = max(density(pos.xyz), 0);
 	emission = vec4(0);
 }
 
-const float T_STEP = 0.1;
-const float MAX_STEPS = 192;
+uniform float T_STEP;
+uniform int MAX_STEPS;
 vec4 volmarch(ray_t ray, vec4 back, float entry, float exit) {
 	vec4 outVal = back;
 	

@@ -103,9 +103,9 @@
 					<width>1</width>
 					<height>1</height>
 					<depth>1</depth>
-					<scaleX>8</scaleX>
-					<scaleY>8</scaleY>
-					<scaleZ>8</scaleZ>
+					<scaleX>6</scaleX>
+					<scaleY>6</scaleY>
+					<scaleZ>6</scaleZ>
 					<topology>TriangleList</topology>
 				</item>
 			</items>
@@ -142,6 +142,17 @@
 				<variable type="float4x4" name="mViewInv" invert="true" system="View" />
 				<variable type="float4x4" name="mModelInv" invert="true" system="GeometryTransform" />
 				<variable type="float4x4" name="mViewProjInv" invert="true" system="ViewProjection" />
+				<variable type="int" name="MAX_STEPS">
+					<row>
+						<value>192</value>
+					</row>
+				</variable>
+				<variable type="float" name="T_STEP">
+					<row>
+						<value>0.100000001</value>
+					</row>
+				</variable>
+				<variable type="float" name="time" system="Time" />
 			</variables>
 			<macros />
 		</pass>
@@ -157,13 +168,15 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="VolumeRenderer" item="pipe" />
+		<entry type="property" name="VolumeContainer" item="pipe" />
 		<entry type="file" name="VolumeRenderer" shader="vs" />
 		<entry type="file" name="VolumeRenderer" shader="ps" />
+		<entry type="pinned" name="T_STEP" owner="VolumeRenderer" />
+		<entry type="pinned" name="MAX_STEPS" owner="VolumeRenderer" />
 		<entry type="camera" fp="false">
-			<distance>16</distance>
-			<pitch>22</pitch>
-			<yaw>41</yaw>
+			<distance>12</distance>
+			<pitch>25</pitch>
+			<yaw>36</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
