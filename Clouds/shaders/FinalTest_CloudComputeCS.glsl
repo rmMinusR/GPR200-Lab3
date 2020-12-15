@@ -36,15 +36,15 @@ vec3 noise3(ivec3 sample_pos, int seed) {
 void main() {
 	CloudParticle currentParticle = CloudBuffer.particles[gl_GlobalInvocationID.x];
 	if (currentParticle.lifetime <= 0) {
-		currentParticle.startPos = noise3(ivec3(77, 30, 55) + ivec3(time), int(gl_GlobalInvocationID.x));
-		currentParticle.lifetime = noise(ivec3(36, 58, 39) + ivec3(time), int(gl_GlobalInvocationID.x)) * 11 + 20;
-		currentParticle.size = noise(ivec3(73, 76, 12) + ivec3(time), int(gl_GlobalInvocationID.x)) * 0.5 + 0.75;
+		currentParticle.startPos = bellcurve(vec3(0, 0, 0), vec3(5, 2, 10), 10, vec3(0, 0, 0), int(gl_GlobalInvocationID.x));
+		currentParticle.lifetime = noise(ivec3(time), int(gl_GlobalInvocationID.x)) * 11 + 20;
+		currentParticle.size = noise(ivec3(time), int(gl_GlobalInvocationID.x)) * 5 + 1;
 		currentParticle.currentPos = currentParticle.startPos;
-		currentParticle.color = vec3(0.8, 0.8, 0.8);
+		currentParticle.color = vec3(noise(ivec3(time), int(gl_GlobalInvocationID.x)) * 0.1) * 0.1;
 	}
 	else {
 		currentParticle.currentPos += vec3(velocity, 0, 0) * deltaTime;
-		currentParticle.lifetime -= deltaTime * 10;
+		currentParticle.lifetime -= deltaTime;
 	}
 	CloudBuffer.particles[gl_GlobalInvocationID.x] = currentParticle;
 }

@@ -3,14 +3,14 @@
 	<pipeline>
 		<pass name="CloudCompute" type="compute" active="true">
 			<shader type="cs" path="shaders\FinalTest_CloudComputeCS.glsl" entry="main" />
-			<groupsize x="10" y="1" z="1" />
+			<groupsize x="150000" y="1" z="1" />
 			<variables>
 				<variable type="float" name="time" system="Time" />
 				<variable type="float" name="deltaTime" system="TimeDelta" />
 			</variables>
 			<macros />
 		</pass>
-		<pass name="CloudPass" type="shader" active="true">
+		<pass name="CloudPass" type="shader" active="false">
 			<shader type="vs" path="shaders\CloudPassVS.glsl" entry="main" />
 			<shader type="ps" path="shaders\CloudPassPS.glsl" entry="main" />
 			<shader used="true" type="gs" path="shaders\CloudPassGS.glsl" entry="main" />
@@ -19,8 +19,38 @@
 				<item value="Normal" semantic="NORMAL" />
 				<item value="Texcoord" semantic="TEXCOORD0" />
 			</inputlayout>
-			<rendertexture />
+			<rendertexture name="CloudDensity" />
 			<items>
+				<item name="CloudBlender" type="renderstate">
+					<blend>true</blend>
+					<alpha2coverage>false</alpha2coverage>
+					<colorsrcfactor>One</colorsrcfactor>
+					<colordstfactor>One</colordstfactor>
+					<colorfunc>Add</colorfunc>
+					<alphasrcfactor>Source Alpha</alphasrcfactor>
+					<alphadstfactor>Inverse Source Alpha</alphadstfactor>
+					<alphafunc>Add</alphafunc>
+					<blendfactor_r>1</blendfactor_r>
+					<blendfactor_g>1</blendfactor_g>
+					<blendfactor_b>1</blendfactor_b>
+					<blendfactor_a>1</blendfactor_a>
+					<depthtest>false</depthtest>
+					<depthclamp>true</depthclamp>
+					<depthmask>false</depthmask>
+					<depthfunc>Less</depthfunc>
+					<depthbias>0</depthbias>
+					<stenciltest>false</stenciltest>
+					<stencilmask>0</stencilmask>
+					<stencilref>255</stencilref>
+					<stencilfrontfunc>Equal</stencilfrontfunc>
+					<stencilbackfunc>Equal</stencilbackfunc>
+					<stencilfrontpass>Keep</stencilfrontpass>
+					<stencilbackpass>Keep</stencilbackpass>
+					<stencilfrontfail>Keep</stencilfrontfail>
+					<stencilbackfail>Keep</stencilbackfail>
+					<depthfrontfail>Keep</depthfrontfail>
+					<depthbackfail>Keep</depthbackfail>
+				</item>
 				<item name="CloudBuffer" type="vertexbuffer">
 					<buffer>CloudBuffer</buffer>
 					<topology>PointList</topology>
@@ -33,33 +63,58 @@
 			</variables>
 			<macros />
 		</pass>
+		<pass name="CloudPass2" type="shader" active="true">
+			<shader type="vs" path="shaders\CloudPass2VS.glsl" entry="main" />
+			<shader type="ps" path="shaders\CloudPass2PS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="CloudQuad" type="geometry">
+					<type>ScreenQuadNDC</type>
+					<width>1</width>
+					<height>1</height>
+					<depth>1</depth>
+					<topology>TriangleList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float2" name="viewPortSize" system="ViewportSize" />
+			</variables>
+			<macros />
+		</pass>
 	</pipeline>
 	<objects>
-		<object type="buffer" name="CloudBuffer" size="640" format="vec3; float; vec3; float; vec3; float; vec3; float;" pausedpreview="false">
+		<object type="buffer" name="CloudBuffer" size="9600000" format="vec3; float; vec3; float; vec3; float; vec3; float;" pausedpreview="false">
 			<bind slot="0" name="CloudCompute" />
 		</object>
-		<object type="texture" path="..\..\Downloads\textures\hardness-100.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
-		<object type="texture" path="..\..\Downloads\textures\hardness-25.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
-		<object type="texture" path="..\..\Downloads\textures\hardness-50.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
+		<object type="texture" path="textures\hardness-100.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
+		<object type="texture" path="textures\hardness-25.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
+		<object type="texture" path="textures\hardness-50.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
 			<bind slot="0" name="CloudPass" />
 		</object>
-		<object type="texture" path="..\..\Downloads\textures\hardness-75.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
+		<object type="texture" path="textures\hardness-75.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
+		<object type="rendertexture" name="CloudDensity" fsize="590,773" clear="true">
+			<bind slot="0" name="CloudPass2" />
+		</object>
 	</objects>
 	<cameras />
 	<settings>
 		<entry type="property" name="CloudCompute" item="pipe" />
-		<entry type="file" name="CloudCompute" shader="cs" />
-		<entry type="file" name="CloudPass" shader="vs" />
-		<entry type="file" name="CloudPass" shader="ps" />
-		<entry type="file" name="CloudPass" shader="gs" />
+		<entry type="file" name="CloudPass2" shader="vs" />
+		<entry type="file" name="CloudPass2" shader="ps" />
 		<entry type="pinned" name="mViewPos" owner="CloudPass" />
 		<entry type="camera" fp="false">
-			<distance>4</distance>
-			<pitch>-3</pitch>
-			<yaw>84</yaw>
+			<distance>50</distance>
+			<pitch>34</pitch>
+			<yaw>80</yaw>
 			<roll>360</roll>
 		</entry>
-		<entry type="clearcolor" r="1" g="0.999989986" b="0.999989986" a="0" />
+		<entry type="clearcolor" r="9.99999997e-07" g="9.99989993e-07" b="9.99989993e-07" a="0" />
 		<entry type="usealpha" val="false" />
 		<entry type="ipaths">
 			<path>shaders</path>
