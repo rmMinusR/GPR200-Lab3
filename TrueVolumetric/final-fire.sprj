@@ -139,6 +139,7 @@
 			<itemvalues />
 			<variables>
 				<variable type="float2" name="vpSize" system="ViewportSize" />
+				<variable type="float4x4" name="mViewInv" invert="true" system="View" />
 			</variables>
 			<macros />
 		</pass>
@@ -159,10 +160,11 @@
 		<entry type="file" name="CloudsCompositor" shader="ps" />
 		<entry type="file" name="CloudsMasker" shader="vs" />
 		<entry type="file" name="CloudsMasker" shader="ps" />
+		<entry type="pinned" name="mViewInv" owner="CloudsCompositor" />
 		<entry type="camera" fp="false">
-			<distance>3</distance>
+			<distance>5</distance>
 			<pitch>30</pitch>
-			<yaw>201</yaw>
+			<yaw>267</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />

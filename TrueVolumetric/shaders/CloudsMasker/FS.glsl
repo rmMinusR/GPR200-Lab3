@@ -49,7 +49,7 @@ void main() {
 	
 	ray_t viewray; //Global space viewing ray
 	viewray.origin = inverse(mView) * vec4(0,0,0,1);
-	viewray.direction = vec4(normalize(global_pos.xyz-viewray.origin.xyz), 0);
+	viewray.direction.xyz = normalize(global_pos.xyz-viewray.origin.xyz);
 	
 	vec3 v = vec3(0.5);
 	vec2 tmp = rayBoxDst((mModel*vec4(-v,1)).xyz, (mModel*vec4(v,1)).xyz, viewray.origin.xyz, viewray.direction.xyz);
