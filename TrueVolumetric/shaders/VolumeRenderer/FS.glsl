@@ -21,10 +21,10 @@ vec4 alpha_mix(vec4 cfront, vec4 cback) {
 	return vec4(cfront.rgb*cfront.a+cback.rgb*(1-cfront.a), 1-(1-cfront.a)*(1-cback.a));
 }
 
-const float T_STEP = 0.05;
+const float T_STEP = 0.02;
 
 void volsample(in vec4 pos, out vec4 diffuse, out vec4 emission) {
-	diffuse = vec4(0.5);
+	diffuse = vec4(0.9);
 	emission = vec4(0);
 }
 
@@ -53,14 +53,4 @@ void main() {
 	viewray.direction = normalize( (mViewInv * vec4(uv,-1,1)) - viewray.origin );
 	
 	finalFragColor = volmarch(viewray, texture(nonClouds, uv), entryDist, exitDist);
-	
-	/*
-	finalFragColor.rgb = mix(
-		texture(nonClouds, uv).rgb,
-		vec3(0.5),
-		clamp(exitDist-entryDist, 0, 1)
-	);
-	*/
-	
-	finalFragColor.a = 1;
 }
