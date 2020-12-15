@@ -7,6 +7,5 @@ out vec4 fragColor;
 
 void main() {
 	fragColor = texture(tex, gl_FragCoord.xy/viewPortSize);
-	fragColor.rg = gl_FragCoord.xy/viewPortSize;
-	fragColor.a = 1;
+	fragColor = 1 - pow((fragColor - 0.7), vec4(2));
 }

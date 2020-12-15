@@ -1,8 +1,6 @@
 #version 430
 
-layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
-
+// struct for taking in the necessary information
 in Vertex {
 	vec3 color;
 	float size;
@@ -10,6 +8,9 @@ in Vertex {
 
 out vec2 uv;
 out vec3 color;
+
+layout (points) in;
+layout (triangle_strip, max_vertices = 4) out;
 
 void main() {
 	color = vertex[0].color;
