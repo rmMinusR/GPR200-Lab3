@@ -103,9 +103,9 @@
 					<width>1</width>
 					<height>1</height>
 					<depth>1</depth>
-					<scaleX>8</scaleX>
-					<scaleY>8</scaleY>
-					<scaleZ>8</scaleZ>
+					<scaleX>16</scaleX>
+					<scaleY>2</scaleY>
+					<scaleZ>16</scaleZ>
 					<topology>TriangleList</topology>
 				</item>
 			</items>
@@ -163,9 +163,9 @@
 		<entry type="file" name="VolumeMasker" shader="vs" />
 		<entry type="file" name="VolumeMasker" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>14</distance>
-			<pitch>22</pitch>
-			<yaw>68</yaw>
+			<distance>18</distance>
+			<pitch>18</pitch>
+			<yaw>312</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />

@@ -10,13 +10,14 @@ uniform vec2 vpSize;
 in vec4 global_pos;
 out vec4 depth;
 
-//This function is Sebastian Lague's work, ported/adapted from HLSL to GLSL.
+//This function is Sebastian Lague's work, ported/adapted (by me) from Unity HLSL to GLSL.
 // Returns (dstToBox, dstInsideBox). If ray misses box, dstInsideBox will be zero
 vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDirection) {
 	//Cube = 6 planes
 	//q = o + t*d
 	//(q-o)/d = t
 	vec3 invRaydir = 1/rayDirection;
+	
     // Adapted from: http://jcgt.org/published/0007/03/04/
     vec3 t0 = (boundsMin - rayOrigin) * invRaydir;
     vec3 t1 = (boundsMax - rayOrigin) * invRaydir;
