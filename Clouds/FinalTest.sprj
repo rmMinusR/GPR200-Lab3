@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<project version="2">
+	<pipeline>
+		<pass name="CloudCompute" type="compute" active="true">
+			<shader type="cs" path="shaders\FinalTest_CloudComputeCS.glsl" entry="main" />
+			<groupsize x="10" y="1" z="1" />
+			<variables>
+				<variable type="float" name="time" system="Time" />
+				<variable type="float" name="deltaTime" system="TimeDelta" />
+			</variables>
+			<macros />
+		</pass>
+		<pass name="CloudPass" type="shader" active="true">
+			<shader type="vs" path="shaders\CloudPassVS.glsl" entry="main" />
+			<shader type="ps" path="shaders\CloudPassPS.glsl" entry="main" />
+			<shader used="true" type="gs" path="shaders\CloudPassGS.glsl" entry="main" />
+			<inputlayout>
+				<item value="Position" semantic="POSITION" />
+				<item value="Normal" semantic="NORMAL" />
+				<item value="Texcoord" semantic="TEXCOORD0" />
+			</inputlayout>
+			<rendertexture />
+			<items>
+				<item name="CloudBuffer" type="vertexbuffer">
+					<buffer>CloudBuffer</buffer>
+					<topology>PointList</topology>
+				</item>
+			</items>
+			<itemvalues />
+			<variables>
+				<variable type="float4x4" name="mViewPos" system="ViewProjection" />
+				<variable type="float4x4" name="mModel" system="GeometryTransform" />
+			</variables>
+			<macros />
+		</pass>
+	</pipeline>
+	<objects>
+		<object type="buffer" name="CloudBuffer" size="640" format="vec3; float; vec3; float; vec3; float; vec3; float;" pausedpreview="false">
+			<bind slot="0" name="CloudCompute" />
+		</object>
+		<object type="texture" path="..\..\Downloads\textures\hardness-100.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
+		<object type="texture" path="..\..\Downloads\textures\hardness-25.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
+		<object type="texture" path="..\..\Downloads\textures\hardness-50.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat">
+			<bind slot="0" name="CloudPass" />
+		</object>
+		<object type="texture" path="..\..\Downloads\textures\hardness-75.png" vflip="false" min_filter="Linear" mag_filter="Nearest" wrap_s="Repeat" wrap_t="Repeat" />
+	</objects>
+	<cameras />
+	<settings>
+		<entry type="property" name="CloudCompute" item="pipe" />
+		<entry type="file" name="CloudCompute" shader="cs" />
+		<entry type="file" name="CloudPass" shader="vs" />
+		<entry type="file" name="CloudPass" shader="ps" />
+		<entry type="file" name="CloudPass" shader="gs" />
+		<entry type="pinned" name="mViewPos" owner="CloudPass" />
+		<entry type="camera" fp="false">
+			<distance>4</distance>
+			<pitch>-3</pitch>
+			<yaw>84</yaw>
+			<roll>360</roll>
+		</entry>
+		<entry type="clearcolor" r="1" g="0.999989986" b="0.999989986" a="0" />
+		<entry type="usealpha" val="false" />
+		<entry type="ipaths">
+			<path>shaders</path>
+		</entry>
+	</settings>
+	<plugindata />
+</project>
