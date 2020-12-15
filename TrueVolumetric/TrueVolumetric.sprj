@@ -81,7 +81,7 @@
 					<blendfactor_g>1</blendfactor_g>
 					<blendfactor_b>1</blendfactor_b>
 					<blendfactor_a>1</blendfactor_a>
-					<depthtest>true</depthtest>
+					<depthtest>false</depthtest>
 					<depthclamp>true</depthclamp>
 					<depthmask>true</depthmask>
 					<depthfunc>Less</depthfunc>
@@ -103,9 +103,9 @@
 					<width>1</width>
 					<height>1</height>
 					<depth>1</depth>
-					<scaleX>16</scaleX>
-					<scaleY>2</scaleY>
-					<scaleZ>16</scaleZ>
+					<scaleX>8</scaleX>
+					<scaleY>8</scaleY>
+					<scaleZ>8</scaleZ>
 					<topology>TriangleList</topology>
 				</item>
 			</items>
@@ -157,15 +157,15 @@
 	</objects>
 	<cameras />
 	<settings>
-		<entry type="property" name="VolumeContainer" item="pipe" />
+		<entry type="property" name="VolumeMaskerRS" item="pipe" />
 		<entry type="file" name="VolumeRenderer" shader="vs" />
 		<entry type="file" name="VolumeRenderer" shader="ps" />
 		<entry type="file" name="VolumeMasker" shader="vs" />
 		<entry type="file" name="VolumeMasker" shader="ps" />
 		<entry type="camera" fp="false">
-			<distance>18</distance>
-			<pitch>18</pitch>
-			<yaw>312</yaw>
+			<distance>3</distance>
+			<pitch>35</pitch>
+			<yaw>94</yaw>
 			<roll>360</roll>
 		</entry>
 		<entry type="clearcolor" r="0" g="0" b="0" a="0" />
